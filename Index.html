@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Cloud Computing Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      /* โทนสีแดงเลือดหมู / แดงเลือดนก (Blood Red Palette) */
+      --primary-red: #800020;
+      --primary-red-hover: #5c0017;
+      --accent-red-bright: #a81c24;
+      --accent-red-light: #fbe8eb;
+      --text-dark: #1e1e1e;
+      --text-muted: #666666;
+      --success: #15803d;
+      --danger: #991b1b;
+      --radius: 20px;
+      
+      --neu-bg: #f4f6f9;
+      --neu-card-bg: #ffffff;
+      --neu-shadow-dark: #d1d5db;
+      --neu-shadow-light: #ffffff;
+      --neu-red: #800020;
+      --neu-red-glow: rgba(128, 0, 32, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background-color: var(--neu-bg); color: var(--text-dark); line-height: 1.5; }
+    
+    .app-container { display: flex; width: 100vw; height: 100vh; position: relative; background: var(--neu-bg); overflow: hidden; }
+
+    /* ปุ่ม 3 ขีด มุมบนซ้าย */
+    .top-toggle-bar { position: fixed; top: 15px; left: 15px; z-index: 120; display: none; }
+    .top-toggle-bar.show-toggle { display: block; }
+    
+    .neu-circle-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--neu-card-bg); border: none; color: var(--neu-red); font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+    .neu-circle-btn:hover { transform: scale(1.05); background: var(--accent-red-light); }
+    .neu-circle-btn:active { transform: scale(0.95); }
+
+    /* Sidebar */
+    .sidebar { 
+      width: 320px; 
+      height: 100vh;
+      background: #ffffff; 
+      color: var(--text-dark); 
+      padding: 1.5rem 1.25rem; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 1.25rem; 
+      box-shadow: 5px 0 20px rgba(0, 0, 0, 0.05); 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      z-index: 100; 
+      flex-shrink: 0; 
+      margin-left: 0; 
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sidebar.collapsed { margin-left: -320px; opacity: 0; pointer-events: none; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(128, 0, 32, 0.2); border-radius: 4px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    
+    .sidebar-profile-card { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 0.25rem; margin-bottom: 0.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f3f4f6; flex-shrink: 0; }
+    .profile-left { display: flex; align-items: center; gap: 0.85rem; overflow: hidden; }
+    
+    .profile-avatar-wrapper { position: relative; width: 52px; height: 52px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .profile-avatar-wrapper:hover { transform: translateY(-2px); }
+    .profile-avatar-wrapper:hover .avatar-hover-overlay { opacity: 1; }
+    
+    .profile-avatar { width: 100%; height: 100%; border-radius: 50%; background: var(--neu-red); color: white; font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; justify-content: center; object-fit: cover; border: 2.5px solid #ffffff; box-shadow: 0 4px 14px rgba(128, 0, 32, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08); }
+    
+    .avatar-hover-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: rgba(0, 0, 0, 0.35); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s ease; }
+    .avatar-camera-badge { position: absolute; bottom: -1px; right: -1px; width: 20px; height: 20px; background: #ffffff; color: var(--primary-red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15); border: 1.5px solid #ffffff; }
+
+    .profile-info { display: flex; flex-direction: column; overflow: hidden; }
+    .profile-email { font-size: 0.9rem; font-weight: 800; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 145px; }
+    .profile-sub { font-size: 0.75rem; color: #9ca3af; font-weight: 600; white-space: nowrap; }
+
+    .btn-toggle-in-tab { width: 38px; height: 38px; border-radius: 50%; background: #f3f4f6; border: none; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s ease; flex-shrink: 0; margin-left: 0.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .btn-toggle-in-tab:hover { background: var(--accent-red-light); color: var(--primary-red); transform: scale(1.08); }
+    
+    .menu-group-label { font-size: 0.75rem; font-weight: 800; color: #9ca3af; letter-spacing: 1px; margin-top: 0.5rem; margin-bottom: -0.25rem; padding-left: 0.5rem; }
+    .nav-menu { display: flex; flex-direction: column; gap: 0.85rem; }
+    .nav-item { padding: 0.9rem 1.25rem; border-radius: 25px; color: #374151; text-decoration: none; cursor: pointer; display: flex; align-items: center; gap: 1rem; font-weight: 700; font-size: 0.95rem; background: #ffffff; box-shadow: 4px 4px 10px #e5e7eb, -4px -4px 10px #ffffff; transition: all 0.2s ease; border: 1px solid #f3f4f6; width: 100%; text-align: left; }
+    .nav-item i { font-size: 1.1rem; color: var(--primary-red); width: 22px; text-align: center; }
+    .nav-item:hover { transform: translateY(-2px); box-shadow: 6px 6px 14px #cbd5e1, -6px -6px 14px #ffffff; color: var(--primary-red); }
+    .nav-item.active { background: var(--neu-red); color: white !important; box-shadow: 0 4px 15px var(--neu-red-glow); border: none; }
+    .nav-item.active i { color: white !important; }
+
+    /* Main Content */
+    .main-content { flex: 1; height: 100vh; padding: 2rem; padding-top: 5rem; padding-left: 4.5rem; overflow-y: auto; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .main-content-inner { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+    /* Student Game View - สไตล์การแต่งหน้าจอสวยงามเป็นพิเศษ */
+    .student-container { max-width: 760px; width: 100%; margin: 1rem auto 3rem auto; padding: 0 0.5rem; }
+    
+    .student-header-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 0.75rem 1.25rem; 
+      border-radius: 25px; 
+      margin-bottom: 1.5rem; 
+      box-shadow: 0 10px 25px rgba(128, 0, 32, 0.06), 0 2px 8px rgba(0,0,0,0.03); 
+      border: 1px solid rgba(251, 232, 235, 0.8);
+    }
+    .student-nav-group { display: flex; gap: 0.6rem; align-items: center; }
+    .neu-nav-btn { 
+      padding: 0.5rem 1.1rem; 
+      border-radius: 20px; 
+      border: 1px solid #f3f4f6; 
+      background: #ffffff; 
+      color: #374151; 
+      font-weight: 700; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 0.4rem; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04); 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .neu-nav-btn:hover { background: var(--accent-red-light); color: var(--primary-red); transform: translateY(-2px); }
+    .neu-nav-btn.exit-btn { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+    .neu-nav-btn.exit-btn:hover { background: #ffe4e6; color: #9f1239; }
+
+    .student-score-banner { 
+      background: linear-gradient(135deg, #ffffff 0%, #fff8f9 100%);
+      border-radius: var(--radius); 
+      padding: 1.25rem 1.75rem; 
+      margin-bottom: 1.5rem; 
+      box-shadow: 0 10px 30px rgba(128, 0, 32, 0.07);
+      border: 1.5px solid var(--accent-red-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .student-score-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 6px; height: 100%;
+      background: linear-gradient(to bottom, var(--primary-red), var(--accent-red-bright));
+    }
+
+    .student-player-badge { display: flex; align-items: center; gap: 0.85rem; }
+    .student-avatar-circle { 
+      width: 48px; height: 48px; 
+      border-radius: 50%; 
+      background: linear-gradient(135deg, var(--primary-red), var(--accent-red-bright)); 
+      color: white; 
+      font-weight: 800; 
+      font-size: 1.25rem; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      box-shadow: 0 4px 12px var(--neu-red-glow); 
+    }
+
+    .student-score-stats { display: flex; gap: 1rem; align-items: center; }
+    .stat-pill { 
+      background: #ffffff; 
+      padding: 0.5rem 1rem; 
+      border-radius: 16px; 
+      border: 1px solid #fce7f3; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02); 
+      text-align: center;
+      min-width: 85px;
+    }
+    .stat-pill-lbl { font-size: 0.7rem; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-pill-val { font-size: 1.25rem; font-weight: 800; color: var(--primary-red); }
+
+    .card { background: white; border-radius: var(--radius); padding: 1.75rem; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.05); margin-bottom: 1.5rem; border: 1px solid var(--accent-red-light); }
+    
+    .question-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .q-badge-step { background: var(--accent-red-light); color: var(--primary-red); padding: 0.4rem 1rem; border-radius: 20px; font-weight: 800; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.4rem; }
+    
+    .timer-badge { 
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
+      color: #92400e; 
+      padding: 0.45rem 1.1rem; 
+      border-radius: 30px; 
+      font-weight: 800; 
+      font-size: 1.1rem; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 0.5rem; 
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    }
+
+    .question-title-text { 
+      font-size: 1.35rem; 
+      font-weight: 800; 
+      color: #0f172a; 
+      line-height: 1.6; 
+      margin-bottom: 1.75rem; 
+      padding: 1.25rem; 
+      background: #fff8f9; 
+      border-radius: 16px; 
+      border-left: 5px solid var(--primary-red);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+    }
+
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .option-btn { 
+      background: #ffffff; 
+      border: 2px solid #f3f4f6; 
+      border-radius: 18px; 
+      padding: 1.15rem 1.35rem; 
+      font-size: 1.05rem; 
+      text-align: left; 
+      cursor: pointer; 
+      font-weight: 600; 
+      display: flex; 
+      align-items: center; 
+      gap: 0.9rem; 
+      width: 100%; 
+      color: #334155;
+      transition: all 0.253s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+    .option-btn:hover { 
+      border-color: var(--primary-red); 
+      background: var(--accent-red-light); 
+      color: var(--primary-red);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(128, 0, 32, 0.12);
+    }
+    .option-btn.selected { 
+      border-color: var(--primary-red); 
+      background: linear-gradient(135deg, #800020 0%, #a81c24 100%); 
+      color: #ffffff !important; 
+      font-weight: 700; 
+      box-shadow: 0 8px 22px var(--neu-red-glow);
+      transform: scale(1.01);
+    }
+    .option-btn.selected .opt-prefix { background: #ffffff; color: var(--primary-red); }
+    .option-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none !important; }
+
+    .opt-prefix { 
+      width: 34px; height: 34px; 
+      border-radius: 50%; 
+      background: var(--accent-red-light); 
+      color: var(--primary-red); 
+      display: flex; align-items: center; justify-content: center; 
+      font-weight: 800; font-size: 0.95rem; 
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .stat-card { background: white; padding: 1.25rem; border-radius: var(--radius); border-left: 6px solid var(--primary-red); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid var(--accent-red-light); border-left-width: 6px; }
+    .stat-val { font-size: 2rem; font-weight: 800; color: var(--text-dark); }
+    .stat-lbl { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+
+    .btn { padding: 0.65rem 1.25rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.1s ease; font-size: 0.9rem; }
+    .btn-primary { background: var(--primary-red); color: white; }
+    .btn-primary:hover { background: var(--primary-red-hover); }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-danger { background: var(--accent-red-bright); color: white; }
+    .btn-danger:hover { background: #800020; }
+    .btn-secondary { background: #f3f4f6; color: var(--text-dark); border: 1px solid #e5e7eb; }
+
+    .upload-source-switch { display: flex; gap: 0.5rem; margin-bottom: 1rem; background: #f8fafc; padding: 4px; border-radius: 12px; border: 1px solid var(--accent-red-light); }
+    .upload-tab-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 8px; font-weight: 700; font-size: 0.88rem; cursor: pointer; background: transparent; color: #64748b; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
+    .upload-tab-btn.active { background: white; color: var(--primary-red); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark); }
+    .form-control { width: 100%; padding: 0.85rem 1rem; border-radius: 10px; border: 2px solid #f9d5db; font-size: 1rem; }
+    .form-control:focus { outline: none; border-color: var(--primary-red); }
+
+    .room-code-badge { background: var(--accent-red-light); color: var(--primary-red); padding: 0.75rem 1.5rem; border-radius: 12px; font-size: 2.2rem; font-weight: 800; letter-spacing: 3px; text-align: center; margin: 0.5rem 0; border: 3px dashed var(--primary-red); }
+
+    .table-container { width: 100%; overflow-x: auto; }
+    .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 1rem; min-width: 500px; }
+    .leaderboard-table th, .leaderboard-table td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--accent-red-light); }
+    .leaderboard-table th { background: var(--accent-red-light); color: var(--primary-red); font-weight: 700; }
+
+    .q-card { background: white; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; border: 1px solid var(--accent-red-light); box-shadow: 0 2px 6px rgba(0,0,0,0.02); position: relative; }
+    .q-title { font-weight: 700; font-size: 1.1rem; color: #0f172a; margin-bottom: 0.75rem; padding-right: 2rem; }
+    .q-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem; margin-bottom: 0.75rem; }
+    .q-option-item { background: #fff8f9; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--accent-red-light); }
+    .q-option-item.correct { background: #dcfce7; border-color: #86efac; color: #166534; font-weight: 600; }
+
+    .material-card { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; border-radius: 14px; background: white; border: 1px solid var(--accent-red-light); margin-bottom: 1rem; transition: all 0.2s ease; }
+    .material-card:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); border-color: var(--primary-red); }
+    .material-icon { width: 50px; height: 50px; border-radius: 12px; background: var(--accent-red-light); color: var(--primary-red); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+
+    .neu-auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; width: 100vw; background-color: #f5f6f8; padding: 20px; }
+    .card-perspective-wrapper { position: relative; width: 530px; height: 530px; border-radius: 50%; background: #ffffff; transform: rotateX(45deg) rotateZ(-20deg); transform-style: preserve-3d; box-shadow: -20px 20px 40px #d1d5db, 20px -20px 40px #ffffff; transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    @media (hover: hover) { .card-perspective-wrapper:hover { transform: rotateX(0deg) rotateZ(0deg) translateZ(0); box-shadow: 15px 15px 35px #d1d5db, -15px -15px 35px #ffffff; } }
+    .card-inner-ring { width: 88%; height: 88%; border-radius: 50%; background: #ffffff; display: flex; justify-content: center; align-items: center; box-shadow: inset 8px 8px 16px #e5e7eb, inset -8px -8px 16px #ffffff; transform: translateZ(15px); }
+    .form-switch-wrapper { width: 84%; height: 84%; position: relative; transform: translateZ(25px); }
+    .card-face { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #ffffff; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 35px 45px; box-shadow: -10px 10px 20px #d1d5db, 10px -10px 20px #ffffff; transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .card-face.hidden { opacity: 0; pointer-events: none; transform: scale(0.85); }
+    .card-face.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+    .form-container { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .neu-h2 { font-size: 1.8rem; color: #111827; font-weight: 800; margin-bottom: 2px; }
+    .neu-subtitle { font-size: 0.78rem; color: #6b7280; margin-bottom: 18px; }
+    .neu-form-group { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+    .neu-input-box { position: relative; width: 100%; }
+    .neu-input-box i.input-icon-left { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--primary-red); font-size: 0.85rem; }
+    .neu-input-box i.input-icon-toggle { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 0.95rem; cursor: pointer; transition: color 0.2s ease; z-index: 10; }
+    .neu-input-box i.input-icon-toggle:hover { color: var(--primary-red); }
+
+    .neu-input { width: 100%; padding: 11px 42px 11px 42px; border: 1px solid var(--accent-red-light); outline: none; background: #fff8f9; border-radius: 20px; font-size: 0.82rem; color: #333; box-shadow: inset 2px 2px 5px #e5e7eb, inset -2px -2px 5px #ffffff; }
+    .neu-btn-submit { width: 100%; padding: 11px; border: none; outline: none; border-radius: 20px; background: var(--primary-red); color: #ffffff; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 12px var(--neu-red-glow); transition: all 0.2s ease; margin-top: 4px; }
+    .neu-switch-text { font-size: 0.72rem; color: #666; margin-top: 14px; }
+    .neu-switch-text a { color: var(--primary-red); font-weight: bold; text-decoration: none; }
+
+    @media (max-width: 850px) {
+      .sidebar { position: fixed; top: 0; left: 0; height: 100vh; }
+      .sidebar.collapsed { margin-left: -320px; }
+      .main-content { padding-left: 1rem; padding-right: 1rem; }
+      .student-container { padding: 0; }
+      .options-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <input type="file" id="profileImageInput" accept="image/*" style="display: none;" onchange="handleProfileImageUpload(event)">
+
+  <div class="top-toggle-bar" id="topToggleBar">
+    <button class="neu-circle-btn" onclick="toggleSidebar()" title="เปิดเมนู"><i class="fa-solid fa-bars"></i></button>
+  </div>
+
+  <div id="app" style="width: 100%; min-height: 100vh;"></div>
+
+  <script>
+    const DEFAULT_EMAIL = "admin@school.com";
+    const DEFAULT_PASS = "admin1234";
+
+    const INITIAL_QUESTIONS = [
+      { QuestionID: "Q-01", Topic: "Cloud Basics", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "ข้อใดคือความหมายที่ถูกต้องที่สุดของ Cloud Computing?", OptionA: "การใช้งานประมวลผลผ่านอินเทอร์เน็ต", OptionB: "การซื้อคอมพิวเตอร์สเปกสูง", OptionC: "การเชื่อมต่อบลูทูธ", OptionD: "การเก็บข้อมูลในแฟลชไดรฟ์", CorrectAnswer: "A", Explanation: "Cloud Computing คือบริการประมวลผลข้อมูลผ่านเครือข่ายอินเทอร์เน็ต" },
+      { QuestionID: "Q-02", Topic: "Cloud Models", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "บริการประเภท IaaS ย่อมาจากคำว่าอะไร?", OptionA: "Infrastructure as a Service", OptionB: "Information as a Service", OptionC: "Internet as a Service", OptionD: "Integration as a Service", CorrectAnswer: "A", Explanation: "IaaS หมายถึงบริการโครงสร้างพื้นฐานไอที" },
+      { QuestionID: "Q-03", Topic: "Cloud Models", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "Google App Engine จัดอยู่ในบริการ Cloud รูปแบบใด?", OptionA: "IaaS", OptionB: "PaaS", OptionC: "SaaS", OptionD: "DaaS", CorrectAnswer: "B", Explanation: "PaaS (Platform as a Service) มอบแพลตฟอร์มสำหรับการพัฒนาแอปพลิเคชัน" },
+      { QuestionID: "Q-04", Topic: "Cloud Services", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "บริการ Gmail หรือ Google Docs จัดเป็นบริการประเภทใด?", OptionA: "SaaS", OptionB: "PaaS", OptionC: "IaaS", OptionD: "BaaS", CorrectAnswer: "A", Explanation: "SaaS (Software as a Service) คือบริการซอฟต์แวร์พร้อมใช้งาน" },
+      { QuestionID: "Q-05", Topic: "Cloud Deployment", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "โมเดล Cloud รูปแบบใดที่มีความปลอดภัยและเป็นส่วนตัวสูงที่สุดสำหรับองค์กร?", OptionA: "Public Cloud", OptionB: "Private Cloud", OptionC: "Community Cloud", OptionD: "Hybrid Cloud", CorrectAnswer: "B", Explanation: "Private Cloud ใช้งานเฉพาะในองค์กรเดียวจึงปลอดภัยที่สุด" },
+      { QuestionID: "Q-06", Topic: "Cloud Basics", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "ข้อใดคือคุณลักษณะเด่นของ Cloud Computing ด้าน On-demand Self-service?", OptionA: "ต้องรอผู้ดูแลระบบอนุมัติทรัพยากรทุกครั้ง", OptionB: "ผู้ใช้บริการจัดการทรัพยากรได้เองตามต้องการ", OptionC: "ต้องซื้อฮาร์ดแวร์ใหม่เมื่อต้องการใช้งานเพิ่ม", OptionD: "ใช้งานได้เฉพาะเวลาราชการเท่านั้น", CorrectAnswer: "B", Explanation: "ผู้ใช้สามารถปรับเพิ่มลดทรัพยากรได้เองทันทีโดยไม่ต้องผ่านเจ้าหน้าที่" },
+      { QuestionID: "Q-07", Topic: "Cloud Basics", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "คุณลักษณะ Rapid Elasticity ของ Cloud หมายถึงอะไร?", OptionA: "ความยืดหยุ่นในการขยายหรือลดทรัพยากรรวดเร็ว", OptionB: "ความเร็วในการส่งข้อมูลผ่านสาย LAN", OptionC: "ความสามารถในการซ่อมแซมฮาร์ดแวร์อัตโนมัติ", OptionD: "ความยืดหยุ่นในการชำระเงินรายปี", CorrectAnswer: "A", Explanation: "Rapid Elasticity คือการปรับขนาดทรัพยากรขึ้นลงได้อย่างยืดหยุ่นและรวดเร็ว" },
+      { QuestionID: "Q-08", Topic: "Cloud Models", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "AWS EC2 (Elastic Compute Cloud) จัดอยู่ในโมเดลใด?", OptionA: "IaaS", OptionB: "PaaS", OptionC: "SaaS", OptionD: "FaaS", CorrectAnswer: "A", Explanation: "AWS EC2 ให้บริการ Virtual Machine ซึ่งจัดเป็น IaaS" },
+      { QuestionID: "Q-09", Topic: "Cloud Models", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "ข้อใดต่อไปนี้ไม่ใช่บริการประเภท SaaS?", OptionA: "Microsoft 365", OptionB: "Google Drive", OptionC: "AWS EC2", OptionD: "Dropbox", CorrectAnswer: "C", Explanation: "AWS EC2 เป็น IaaS ไม่ใช่ SaaS" },
+      { QuestionID: "Q-10", Topic: "Cloud Deployment", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "การผสมผสานระหว่าง Public Cloud และ Private Cloud เรียกว่าอะไร?", OptionA: "Group Cloud", OptionB: "Hybrid Cloud", OptionC: "Community Cloud", OptionD: "Multi-Cloud", CorrectAnswer: "B", Explanation: "Hybrid Cloud คือการทำงานร่วมกันระหว่าง Public และ Private Cloud" },
+      { QuestionID: "Q-11", Topic: "Cloud Security", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "ข้อใดคือรูปแบบความรับผิดชอบร่วมกัน (Shared Responsibility Model) บน Cloud?", OptionA: "ผู้ให้บริการดูแลรับผิดชอบทุกอย่าง 100%", OptionB: "ผู้ใช้บริการต้องดูแลความปลอดภัยฮาร์ดแวร์เอง", OptionC: "ผู้ให้บริการดูแลโครงสร้างพื้นฐาน ผู้ใช้ดูแลข้อมูลและแอป", OptionD: "รัฐบาลเป็นผู้รับผิดชอบความปลอดภัยทั้งหมด", CorrectAnswer: "C", Explanation: "ผู้ให้บริการรับผิดชอบความปลอดภัยของ Cloud ส่วนผู้ใช้ดูแลสิ่งที่อยู่ใน Cloud" },
+      { QuestionID: "Q-12", Topic: "Cloud Security", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "เทคโนโลยีใดใช้ในการยื่นยืนยันตัวตนหลายขั้นตอนเพื่อความปลอดภัยบน Cloud?", OptionA: "MFA (Multi-Factor Authentication)", OptionB: "VPN", OptionC: "DNS", OptionD: "FTP", CorrectAnswer: "A", Explanation: "MFA เพิ่มความปลอดภัยโดยใช้การยืนยันตัวตนมากกว่า 1 วิธี" },
+      { QuestionID: "Q-13", Topic: "Cloud Storage", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "ข้อใดเป็นบริการจัดเก็บข้อมูลออบเจกต์ (Object Storage) บน AWS?", OptionA: "AWS S3", OptionB: "AWS EBS", OptionC: "AWS EFS", OptionD: "AWS RDS", CorrectAnswer: "A", Explanation: "AWS S3 (Simple Storage Service) คือบริการ Object Storage" },
+      { QuestionID: "Q-14", Topic: "Cloud Networking", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "VPC ย่อมาจากอะไรในระบบ Cloud Networking?", OptionA: "Virtual Private Network", OptionB: "Virtual Private Cloud", OptionC: "Verified Public Cloud", OptionD: "Variable Power Cloud", CorrectAnswer: "B", Explanation: "VPC (Virtual Private Cloud) คือเครือข่ายเสมือนส่วนตัวบนระบบ Cloud" },
+      { QuestionID: "Q-15", Topic: "Cloud Cost", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "รูปแบบการคิดค่าบริการของ Cloud Computing มักใช้เกณฑ์ใด?", OptionA: "Pay-as-you-go (จ่ายตามการใช้งานจริง)", OptionB: "จ่ายค่าธรรมเนียมเหมาจ่ายตลอดชีพ", OptionC: "คิดราคาตามจำนวนเครื่องคอมพิวเตอร์ในบ้าน", OptionD: "ฟรีไม่มีค่าใช้จ่ายทุกกรณี", CorrectAnswer: "A", Explanation: "Cloud มักคิดค่าบริการตามปริมาณและเวลาที่ใช้งานจริง (Pay-as-you-go)" },
+      { QuestionID: "Q-16", Topic: "Cloud Technology", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "เทคโนโลยี Virtualization มีบทบาทอย่างไรใน Cloud Computing?", OptionA: "ช่วยให้สร้างเครื่องเสมือน (VM) หลายเครื่องบนฮาร์ดแวร์เดียว", OptionB: "ใช้เพิ่มความเร็วอินเทอร์เน็ตบ้าน", OptionC: "ใช้แปลงสัญญาณอนาล็อกเป็นดิจิทัล", OptionD: "ใช้ป้องกันไวรัสในเครื่องลูกข่าย", CorrectAnswer: "A", Explanation: "Virtualization จำลองทรัพยากรฮาร์ดแวร์เพื่อสร้างคอมพิวเตอร์เสมือนหลายเครื่อง" },
+      { QuestionID: "Q-17", Topic: "Cloud Technology", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "Hypervisor มีหน้าที่อะไรในระบบ Virtualization?", OptionA: "จัดการและบริหาร Virtual Machines บนฮาร์ดแวร์", OptionB: "เป็นโปรแกรมท่องเว็บ", OptionC: "เป็นระบบตรวจคำผิดในเอกสาร", OptionD: "ทำหน้าที่กระจายสัญญาณ Wi-Fi", CorrectAnswer: "A", Explanation: "Hypervisor เป็นซอฟต์แวร์ควบคุมการทำงานของ VM บนฮาร์ดแวร์กายภาพ" },
+      { QuestionID: "Q-18", Topic: "Cloud Models", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "Firebase ของ Google จัดอยู่ในบริการรูปแบบใดเป็นหลัก?", OptionA: "PaaS / BaaS", OptionB: "IaaS", OptionC: "SaaS", OptionD: "DaaS", CorrectAnswer: "A", Explanation: "Firebase ให้บริการ Platform / Backend as a Service สำหรับนักพัฒนา" },
+      { QuestionID: "Q-19", Topic: "Cloud Containers", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "เทคโนโลยี Container ใดที่เป็นที่นิยมอย่างมากในการแพ็กเกจแอปพลิเคชัน?", OptionA: "Docker", OptionB: "VMware Workstation", OptionC: "VirtualBox", OptionD: "Apache", CorrectAnswer: "A", Explanation: "Docker เป็นแพลตฟอร์มสร้างและจัดการ Container ที่นิยมสูงสุด" },
+      { QuestionID: "Q-20", Topic: "Cloud Containers", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "Kubernetes (K8s) ใช้ทำหน้าที่อะไรในระบบ Cloud?", OptionA: "บริหารจัดการและจัดระเบียบ Containers (Orchestration)", OptionB: "สร้างภาพกราฟิก 3 มิติ", OptionC: "แก้ไขโค้ดภาษา Python", OptionD: "เป็นฐานข้อมูลเชิงสัมพันธ์", CorrectAnswer: "A", Explanation: "Kubernetes เป็นระบบอัตโนมัติสำหรับบริหารจัดการ Container ขนาดใหญ่" },
+      { QuestionID: "Q-21", Topic: "Cloud Deployment", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "Cloud ประเภทใดที่ใช้ร่วมกันในกลุ่มองค์กรที่มีพันธกิจหรือข้อบังคับคล้ายกัน?", OptionA: "Community Cloud", OptionB: "Private Cloud", OptionC: "Public Cloud", OptionD: "Personal Cloud", CorrectAnswer: "A", Explanation: "Community Cloud แชร์ใช้งานร่วมกันเฉพาะกลุ่มองค์กรที่มีเป้าหมายเดียวกัน" },
+      { QuestionID: "Q-22", Topic: "Cloud Serverless", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "แนวคิด Serverless Computing (เช่น AWS Lambda) หมายถึงข้อใด?", OptionA: "ไม่มีเซิร์ฟเวอร์อยู่จริงในโลก", OptionB: "ผู้พัฒนาเขียนโค้ดได้โดยไม่ต้องจัดการดูแลเซิร์ฟเวอร์เอง", OptionC: "ใช้งานได้โดยไม่ต้องต่ออินเทอร์เน็ต", OptionD: "รันโค้ดได้เฉพาะบนไมโครคอนโทรลเลอร์", CorrectAnswer: "B", Explanation: "Serverless หมายถึงผู้พัฒนาไม่ต้องคอยดูแลโครงสร้างเซิร์ฟเวอร์เอง" },
+      { QuestionID: "Q-23", Topic: "Cloud Database", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "ฐานข้อมูลประเภท NoSQL เหมาะกับข้อมูลรูปแบบใด?", OptionA: "ข้อมูลไม่มีโครงสร้างแน่นอน (Unstructured Data)", OptionB: "ข้อมูลตารางบัญชีที่มีความสัมพันธ์เคร่งครัด", OptionC: "ข้อมูลไฟล์เอกสาร Word เท่านั้น", OptionD: "ข้อมูลเสียงในแผ่นซีดี", CorrectAnswer: "A", Explanation: "NoSQL รองรับข้อมูลที่ไม่มีโครงสร้างแน่นอนและปรับเปลี่ยนไดนามิกได้ดี" },
+      { QuestionID: "Q-24", Topic: "Cloud Benefits", Difficulty: "Easy", QuestionType: "4Choice", QuestionText: "ข้อใดไม่ใช่ประโยชน์ของการเปลี่ยนมาใช้ Cloud Computing?", OptionA: "ลดค่าใช้จ่ายการลงทุนฮาร์ดแวร์เริ่มต้น (CapEx)", OptionB: "เข้าถึงข้อมูลได้จากทุกที่ผ่านอินเทอร์เน็ต", OptionC: "ขยายระบบได้รวดเร็วรองรับผู้ใช้จำนวนมาก", OptionD: "ไม่ต้องใช้อินเทอร์เน็ตในการทำงาน", CorrectAnswer: "D", Explanation: "Cloud จำเป็นต้องใช้อินเทอร์เน็ตหรือเครือข่ายในการเข้าถึงบริการ" },
+      { QuestionID: "Q-25", Topic: "Cloud Architecture", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "High Availability (HA) บน Cloud มีเป้าหมายหลักเพื่อสิ่งใด?", OptionA: "ทำให้ระบบทำงานได้ต่อเนื่องแทบไม่มีเวลาล่ม (Uptime สูง)", OptionB: "ทำให้ค่าบริการลดลงเหลือ 0 บาท", OptionC: "ทำให้โค้ดทำงานได้สั้นลง", OptionD: "เพิ่มความเร็วการดาวน์โหลดไฟล์ 100 เท่า", CorrectAnswer: "A", Explanation: "High Availability มุ่งเน้นความพร้อมใช้งานสูงเพื่อป้องกันระบบหยุดทำงาน" },
+      { QuestionID: "Q-26", Topic: "Cloud Storage", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "ข้อใดคือลักษณะของ Block Storage บน Cloud?", OptionA: "เหมาะสำหรับเป็นดิสก์เสมือนของ OS และฐานข้อมูล", OptionB: "เหมาะสำหรับเก็บไฟล์รูปภาพแสดงบนเว็บ", OptionC: "ใช้ส่งอีเมลหาผู้รับจำนวนมาก", OptionD: "ใช้แปลงไฟล์วิดีโอเป็น MP3", CorrectAnswer: "A", Explanation: "Block Storage ทำหน้าที่เหมือนฮาร์ดดิสก์ต่อตรงกับ Virtual Machine" },
+      { QuestionID: "Q-27", Topic: "Cloud Networking", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "Load Balancer มีหน้าที่อะไรในระบบ Cloud?", OptionA: "กระจายปริมาณการใช้งานไปยังเซิร์ฟเวอร์หลายๆ เครื่อง", OptionB: "สำรองข้อมูลลงเทปบันทึกภาพ", OptionC: "บล็อกโฆษณาบนเว็บไซต์", OptionD: "ตรวจหาไวรัสในไฟล์ ZIP", CorrectAnswer: "A", Explanation: "Load Balancer กระจาย Traffic ให้เซิร์ฟเวอร์รับงานอย่างสมดุล" },
+      { QuestionID: "Q-28", Topic: "Cloud Disaster Recovery", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "ค่า RTO (Recovery Time Objective) ในแผนสำรองภัยพิบัติหมายถึงอะไร?", OptionA: "ระยะเวลาสูงสุดที่ยอมให้ระบบหยุดทำงานจนกว่าจะกู้คืนสำเร็จ", OptionB: "จำนวนเงินที่ต้องจ่ายเมื่อระบบล่ม", OptionC: "ปริมาณข้อมูลที่สูญหายได้", OptionD: "เวลาที่ใช้ในการติดตั้ง Windows ใหม่", CorrectAnswer: "A", Explanation: "RTO คือเป้าหมายระยะเวลาในการกู้คืนระบบกลับมาใช้งานตามปกติ" },
+      { QuestionID: "Q-29", Topic: "Cloud Disaster Recovery", Difficulty: "Hard", QuestionType: "4Choice", QuestionText: "ค่า RPO (Recovery Point Objective) เกี่ยวข้องกับสิ่งใด?", OptionA: "ปริมาณข้อมูลย้อนหลังสูงสุดที่ยินยอมให้สูญหายได้", OptionB: "ความเร็วของ CPU บนเซิร์ฟเวอร์สำรอง", OptionC: "จำนวนพนักงานที่ต้องเข้ากู้ภัย", OptionD: "ระยะทางระหว่าง Data Center", CorrectAnswer: "A", Explanation: "RPO วัดจากจุดเวลาของข้อมูลที่ถูกสำรองไว้ล่าสุดที่ยอมให้สูญหายได้" },
+      { QuestionID: "Q-30", Topic: "Cloud Trends", Difficulty: "Medium", QuestionType: "4Choice", QuestionText: "Edge Computing ทำงานร่วมกับ Cloud Computing ในลักษณะใด?", OptionA: "ประมวลผลข้อมูลใกล้แหล่งกำเนิดข้อมูลก่อนส่งเข้า Cloud", OptionB: "ยกเลิกการใช้งาน Cloud แล้วใช้โน้ตบุ๊กแทน", OptionC: "ย้าย Data Center ไปไว้ในอวกาศ", OptionD: "ส่งข้อมูลผ่านสายเคเบิลใต้น้ำเท่านั้น", CorrectAnswer: "A", Explanation: "Edge Computing ช่วยประมวลผลข้อมูล ณ จุดเกิดข้อมูลเพื่อลดความล่าช้า (Latency)" }
+    ];
+
+    const INITIAL_MATERIALS = [
+      { id: 'M-01', title: 'สไลด์ประกอบการสอน: ความรู้พื้นฐาน Cloud Computing (Chapter 1)', type: 'slide', format: 'PPTX / PDF', size: '12.4 MB', icon: 'fa-file-powerpoint', url: '#' },
+      { id: 'M-02', title: 'เอกสารสรุป Service Models (IaaS, PaaS, SaaS)', type: 'doc', format: 'PDF Document', size: '3.8 MB', icon: 'fa-file-pdf', url: '#' }
+    ];
+
+    const INITIAL_WORKSHEETS = [
+      { id: 'W-01', title: 'ใบงานที่ 1: เปรียบเทียบความแตกต่างระหว่าง IaaS, PaaS และ SaaS', score: 10, format: 'PDF Document', size: '1.2 MB', icon: 'fa-file-signature', url: '#' },
+      { id: 'W-02', title: 'ใบงานที่ 2: การออกแบบสถาปัตยกรรม Hybrid Cloud สำหรับองค์กร', score: 20, format: 'DOCX / PDF', size: '2.5 MB', icon: 'fa-file-pen', url: '#' }
+    ];
+
+    const INITIAL_LESSON_PLANS = [
+      { id: 'LP-01', title: 'แผนการจัดการเรียนรู้ที่ 1: ความรู้พื้นฐานเกี่ยวกับ Cloud Computing (4 ชั่วโมง)', format: 'PDF Document', size: '2.1 MB', icon: 'fa-clipboard-list', url: '#' },
+      { id: 'LP-02', title: 'แผนการจัดการเรียนรู้ที่ 2: การประยุกต์ใช้งาน Cloud Models ในองค์กร (3 ชั่วโมง)', format: 'DOCX / PDF', size: '1.8 MB', icon: 'fa-clipboard-list', url: '#' }
+    ];
+
+    const INITIAL_ROOMS = [
+      { RoomID: '123456', Title: 'Cloud Computing Challenge Test', TotalQuestions: 30, TimePerQuestion: 30, Status: 'Playing' }
+    ];
+
+    let questionsStore = JSON.parse(localStorage.getItem('cloud_game_questions')) || INITIAL_QUESTIONS;
+    let materialsStore = JSON.parse(localStorage.getItem('cloud_game_materials')) || INITIAL_MATERIALS;
+    let worksheetsStore = JSON.parse(localStorage.getItem('cloud_game_worksheets')) || INITIAL_WORKSHEETS;
+    let lessonPlansStore = JSON.parse(localStorage.getItem('cloud_game_lesson_plans')) || INITIAL_LESSON_PLANS;
+    let roomsStore = JSON.parse(localStorage.getItem('cloud_game_rooms')) || INITIAL_ROOMS;
+
+    function saveQuestionsToStore() { localStorage.setItem('cloud_game_questions', JSON.stringify(questionsStore)); }
+    function saveMaterialsToStore() { localStorage.setItem('cloud_game_materials', JSON.stringify(materialsStore)); }
+    function saveWorksheetsToStore() { localStorage.setItem('cloud_game_worksheets', JSON.stringify(worksheetsStore)); }
+    function saveLessonPlansToStore() { localStorage.setItem('cloud_game_lesson_plans', JSON.stringify(lessonPlansStore)); }
+    function saveRoomsToStore() { localStorage.setItem('cloud_game_rooms', JSON.stringify(roomsStore)); }
+
+    let state = {
+      token: localStorage.getItem('teacher_token') || null,
+      teacherName: localStorage.getItem('teacher_name') || 'ครูผู้สอน Cloud Computing',
+      teacherAvatar: localStorage.getItem('teacher_avatar') || null,
+      currentView: 'AUTH',
+      authMode: 'LOGIN',
+      studentRoomId: localStorage.getItem('student_room_id') || null,
+      studentId: localStorage.getItem('student_id') || null,
+      studentName: localStorage.getItem('student_name') || '',
+      activeTeacherRoomId: null,
+      pollInterval: null,
+      selectedOption: null,
+      hasSubmitted: false,
+      lastRenderedQuestionIndex: null,
+      gameSync: null,
+      isSidebarCollapsed: false,
+      showAddQuestionForm: false,
+      showAddMaterialForm: false,
+      showAddWorksheetForm: false,
+      showAddLessonPlanForm: false,
+      materialUploadMode: 'FILE',
+      worksheetUploadMode: 'FILE',
+      lessonPlanUploadMode: 'FILE',
+      uploadedFileData: null,
+      uploadedWorksheetData: null,
+      uploadedLessonPlanData: null
+    };
+
+    window.onload = function() {
+      if (state.studentRoomId) {
+        if (state.studentId) switchView('STUDENT_GAME');
+        else { state.authMode = 'STUDENT_JOIN'; switchView('AUTH'); }
+      } else if (state.token) {
+        switchView('DASHBOARD');
+      } else {
+        state.authMode = 'LOGIN';
+        switchView('AUTH');
+      }
+    };
+
+    function triggerProfileImageSelect() {
+      document.getElementById('profileImageInput').click();
+    }
+
+    function handleProfileImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert("กรุณาเลือกไฟล์ภาพที่มีขนาดไม่เกิน 5 MB ครับ");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          state.teacherAvatar = e.target.result;
+          localStorage.setItem('teacher_avatar', state.teacherAvatar);
+          switchView(state.currentView);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeProfileImage() {
+      if (confirm("คุณต้องการรีเซ็ตรูปโปรไฟล์กลับเป็นตัวอักษรเริ่มต้นใช่หรือไม่?")) {
+        state.teacherAvatar = null;
+        localStorage.removeItem('teacher_avatar');
+        switchView(state.currentView);
+      }
+    }
+
+    function toggleSidebar() {
+      state.isSidebarCollapsed = !state.isSidebarCollapsed;
+      const sidebar = document.getElementById('appSidebar');
+      const topBar = document.getElementById('topToggleBar');
+      if (sidebar) {
+        if (state.isSidebarCollapsed) {
+          sidebar.classList.add('collapsed');
+          if (topBar) topBar.classList.add('show-toggle');
+        } else {
+          sidebar.classList.remove('collapsed');
+          if (topBar) topBar.classList.remove('show-toggle');
+        }
+      }
+    }
+
+    function togglePasswordVisibility(inputId, iconElement) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        iconElement.classList.remove('fa-eye');
+        iconElement.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        iconElement.classList.remove('fa-eye-slash');
+        iconElement.classList.add('fa-eye');
+      }
+    }
+
+    function switchView(viewName, data) {
+      state.currentView = viewName;
+      if (state.pollInterval) clearInterval(state.pollInterval);
+      const app = document.getElementById('app');
+      
+      if (viewName === 'AUTH') renderAuthView(app);
+      else if (viewName === 'STUDENT_GAME') { renderStudentGameView(app); startPolling(); }
+      else if (viewName === 'DASHBOARD') renderTeacherLayout(app, renderDashboardContent);
+      else if (viewName === 'VIEW_PROFILE') renderTeacherLayout(app, renderViewProfileContent);
+      else if (viewName === 'EDIT_PROFILE') renderTeacherLayout(app, renderEditProfileContent);
+      else if (viewName === 'CREATE_ROOM') renderTeacherLayout(app, renderCreateRoomContent);
+      else if (viewName === 'QUESTIONS') renderTeacherLayout(app, renderQuestionsContent);
+      else if (viewName === 'TEACHING_MATERIALS') renderTeacherLayout(app, renderTeachingMaterialsContent);
+      else if (viewName === 'WORKSHEETS') renderTeacherLayout(app, renderWorksheetsContent);
+      else if (viewName === 'LESSON_PLANS') renderTeacherLayout(app, renderLessonPlansContent);
+      else if (viewName === 'MY_ROOMS') renderTeacherLayout(app, renderMyRoomsContent);
+      else if (viewName === 'TEACHER_CONTROL') { state.activeTeacherRoomId = data; renderTeacherLayout(app, renderTeacherControlContent); startPolling(); }
+      else if (viewName === 'ANALYTICS') renderTeacherLayout(app, renderAnalyticsContent);
+    }
+
+    function startPolling() {
+      fetchGameSyncData();
+      state.pollInterval = setInterval(fetchGameSyncData, 2000);
+    }
+
+    function fetchGameSyncData() {
+      state.gameSync = {
+        roomId: state.activeTeacherRoomId || state.studentRoomId || "123456",
+        title: "Cloud Computing Challenge Test",
+        status: "Playing",
+        timeRemaining: 25,
+        totalQuestions: questionsStore.length,
+        currentQuestionIndex: 1,
+        currentQuestion: questionsStore[0] || INITIAL_QUESTIONS[0],
+        leaderboard: [
+          { StudentID: "STU-01", StudentName: state.studentName || "นักเรียน 1", TotalScore: 10, CorrectCount: 1 }
+        ],
+        myScore: { TotalScore: 10, CorrectCount: 1, Rank: 1 }
+      };
+      updateActiveViewDynamicElements();
+    }
+
+    function handleStudentExitGame() {
+      if (confirm('คุณต้องการออกจากห้องแข่งขันนี้ใช่หรือไม่?')) {
+        localStorage.removeItem('student_room_id');
+        localStorage.removeItem('student_id');
+        localStorage.removeItem('student_name');
+        state.studentRoomId = null;
+        state.studentId = null;
+        state.studentName = '';
+        state.authMode = 'STUDENT_JOIN';
+        switchView('AUTH');
+      }
+    }
+
+    function handleStudentGoHome() {
+      state.authMode = 'STUDENT_JOIN';
+      switchView('AUTH');
+    }
+
+    function renderAuthView(container) {
+      const isLoginActive = state.authMode === 'LOGIN';
+      container.innerHTML = `
+        <div class="neu-auth-container">
+          <div class="card-perspective-wrapper" id="cardWrapper">
+            <div class="card-inner-ring">
+              <div class="form-switch-wrapper">
+                <div class="card-face ${isLoginActive ? 'active' : 'hidden'}" id="login-card">
+                  <div class="form-container">
+                    <h2 class="neu-h2">Login</h2>
+                    <span class="neu-subtitle">Sign in to your teacher account</span>
+                    <form class="neu-form-group" onsubmit="handleTeacherLogin(event)">
+                      <div class="neu-input-box">
+                        <i class="fa-solid fa-user input-icon-left"></i>
+                        <input type="email" id="loginEmail" class="neu-input" placeholder="Email / Username" value="${DEFAULT_EMAIL}" required>
+                      </div>
+                      <div class="neu-input-box">
+                        <i class="fa-solid fa-lock input-icon-left"></i>
+                        <input type="password" id="loginPass" class="neu-input" placeholder="Password" value="${DEFAULT_PASS}" required>
+                        <i class="fa-solid fa-eye input-icon-toggle" onclick="togglePasswordVisibility('loginPass', this)" title="แสดง/ซ่อนรหัสผ่าน"></i>
+                      </div>
+                      <button type="submit" class="neu-btn-submit">SIGN IN</button>
+                    </form>
+                    <div class="neu-switch-text">
+                      สำหรับนักเรียน? <a href="#" onclick="switchForm(event, 'STUDENT_JOIN')">เข้าร่วมเล่นเกม</a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-face ${!isLoginActive ? 'active' : 'hidden'}" id="signup-card">
+                  <div class="form-container">
+                    <h2 class="neu-h2">Join Game</h2>
+                    <span class="neu-subtitle">Enter room PIN and student name</span>
+                    <form class="neu-form-group" onsubmit="handleStudentJoin(event)">
+                      <div class="neu-input-box">
+                        <i class="fa-solid fa-key input-icon-left"></i>
+                        <input type="text" id="stuRoomId" class="neu-input" style="text-align: center; font-weight: 700; letter-spacing: 2px;" placeholder="รหัสห้อง (PIN)" value="${state.studentRoomId || ''}" required>
+                      </div>
+                      <div class="neu-input-box">
+                        <i class="fa-solid fa-user-graduate input-icon-left"></i>
+                        <input type="text" id="stuName" class="neu-input" placeholder="ชื่อนักเรียน" value="${state.studentName || ''}" required>
+                      </div>
+                      <button type="submit" class="neu-btn-submit" style="margin-top: 8px;">JOIN GAME</button>
+                    </form>
+                    <div class="neu-switch-text">
+                      สำหรับครูผู้สอน? <a href="#" onclick="switchForm(event, 'LOGIN')">เข้าสู่ระบบครู</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function switchForm(e, targetMode) {
+      e.preventDefault();
+      state.authMode = targetMode;
+      const loginCard = document.getElementById('login-card');
+      const signupCard = document.getElementById('signup-card');
+      if (targetMode === 'STUDENT_JOIN') {
+        loginCard.classList.remove('active'); loginCard.classList.add('hidden');
+        signupCard.classList.remove('hidden'); signupCard.classList.add('active');
+      } else {
+        signupCard.classList.remove('active'); signupCard.classList.add('hidden');
+        loginCard.classList.remove('hidden'); loginCard.classList.add('active');
+      }
+    }
+
+    function handleTeacherLogin(e) {
+      e.preventDefault();
+      state.token = 'TOKEN-DEMO';
+      state.teacherName = 'ครูผู้สอน Cloud Computing';
+      localStorage.setItem('teacher_token', state.token);
+      localStorage.setItem('teacher_name', state.teacherName);
+      switchView('DASHBOARD');
+    }
+
+    function handleStudentJoin(e) {
+      e.preventDefault();
+      const roomId = document.getElementById('stuRoomId').value.trim();
+      const name = document.getElementById('stuName').value.trim();
+      state.studentRoomId = roomId;
+      state.studentId = 'STU-' + Math.floor(Math.random() * 900000);
+      state.studentName = name;
+      localStorage.setItem('student_room_id', roomId);
+      localStorage.setItem('student_id', state.studentId);
+      localStorage.setItem('student_name', name);
+      switchView('STUDENT_GAME');
+    }
+
+    function renderTeacherLayout(container, contentFn) {
+      const emailText = state.teacherName || DEFAULT_EMAIL;
+      const avatarInitial = emailText.charAt(0).toUpperCase();
+
+      const avatarHtml = state.teacherAvatar 
+        ? `<img src="${state.teacherAvatar}" class="profile-avatar" alt="Avatar">`
+        : `<div class="profile-avatar">${avatarInitial}</div>`;
+
+      container.innerHTML = `
+        <div class="app-container">
+          <div class="sidebar ${state.isSidebarCollapsed ? 'collapsed' : ''}" id="appSidebar">
+            <div class="sidebar-profile-card">
+              <div class="profile-left">
+                <div class="profile-avatar-wrapper" onclick="triggerProfileImageSelect()" title="คลิกเพื่อเปลี่ยนรูปโปรไฟล์">
+                  ${avatarHtml}
+                  <div class="avatar-hover-overlay"><i class="fa-solid fa-camera"></i></div>
+                  <div class="avatar-camera-badge"><i class="fa-solid fa-camera"></i></div>
+                </div>
+                <div class="profile-info">
+                  <div class="profile-email">${emailText}</div>
+                  <div class="profile-sub">Cloud Challenge Menu</div>
+                </div>
+              </div>
+              <button class="btn-toggle-in-tab" onclick="toggleSidebar()" title="ปิดแท็บเมนู">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div class="nav-menu">
+              <button class="nav-item ${state.currentView === 'VIEW_PROFILE' ? 'active' : ''}" onclick="switchView('VIEW_PROFILE')">
+                <i class="fa-regular fa-eye"></i> <span>View Profile</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'EDIT_PROFILE' ? 'active' : ''}" onclick="switchView('EDIT_PROFILE')">
+                <i class="fa-regular fa-user"></i> <span>Edit Profile</span>
+              </button>
+            </div>
+
+            <div class="menu-group-label">ACCOUNTS & DASHBOARD</div>
+            <div class="nav-menu">
+              <button class="nav-item ${state.currentView === 'DASHBOARD' ? 'active' : ''}" onclick="switchView('DASHBOARD')">
+                <i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'CREATE_ROOM' ? 'active' : ''}" onclick="switchView('CREATE_ROOM')">
+                <i class="fa-solid fa-plus-circle"></i> <span>สร้างห้องเกม</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'MY_ROOMS' ? 'active' : ''}" onclick="switchView('MY_ROOMS')">
+                <i class="fa-solid fa-gamepad"></i> <span>ห้องเกมของฉัน</span>
+              </button>
+            </div>
+
+            <div class="menu-group-label">MANAGEMENT</div>
+            <div class="nav-menu">
+              <button class="nav-item ${state.currentView === 'QUESTIONS' ? 'active' : ''}" onclick="switchView('QUESTIONS')">
+                <i class="fa-solid fa-list-check"></i> <span>คลังคำถาม</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'ANALYTICS' ? 'active' : ''}" onclick="switchView('ANALYTICS')">
+                <i class="fa-solid fa-chart-line"></i> <span>รายงานผล</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'TEACHING_MATERIALS' ? 'active' : ''}" onclick="switchView('TEACHING_MATERIALS')">
+                <i class="fa-solid fa-book-open"></i> <span>สื่อการสอน</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'WORKSHEETS' ? 'active' : ''}" onclick="switchView('WORKSHEETS')">
+                <i class="fa-solid fa-file-pen"></i> <span>ใบงาน</span>
+              </button>
+              <button class="nav-item ${state.currentView === 'LESSON_PLANS' ? 'active' : ''}" onclick="switchView('LESSON_PLANS')">
+                <i class="fa-solid fa-clipboard-list"></i> <span>แผนการสอน</span>
+              </button>
+            </div>
+
+            <div class="nav-menu" style="margin-top: auto; padding-top: 1rem;">
+              <button class="nav-item" style="color: var(--primary-red);" onclick="handleLogout()">
+                <i class="fa-solid fa-arrow-right-from-bracket" style="color: var(--primary-red);"></i> <span>ออกจากระบบ</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="main-content" id="mainContent">
+            <div class="main-content-inner" id="mainContentInner"></div>
+          </div>
+        </div>
+      `;
+      contentFn(document.getElementById('mainContentInner'));
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('teacher_token');
+      localStorage.removeItem('teacher_name');
+      state.token = null; state.authMode = 'LOGIN'; switchView('AUTH');
+    }
+
+    function renderViewProfileContent(container) {
+      const avatarInitial = state.teacherName.charAt(0).toUpperCase();
+      const avatarHtml = state.teacherAvatar 
+        ? `<img src="${state.teacherAvatar}" class="profile-avatar" style="width: 80px; height: 80px;" alt="Avatar">`
+        : `<div class="profile-avatar" style="width: 80px; height: 80px; font-size: 2.2rem;">${avatarInitial}</div>`;
+
+      container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">โปรไฟล์ผู้สอน (Teacher Profile)</h2>
+        <div class="card" style="border-top: 6px solid var(--primary-red);">
+          <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap;">
+            <div class="profile-avatar-wrapper" style="width: 80px; height: 80px;" onclick="triggerProfileImageSelect()" title="คลิกเปลี่ยนรูปโปรไฟล์">
+              ${avatarHtml}
+              <div class="avatar-hover-overlay"><i class="fa-solid fa-camera fa-lg"></i></div>
+            </div>
+            <div>
+              <h2 style="font-weight: 800; color: var(--text-dark);">${state.teacherName}</h2>
+              <span style="background: var(--accent-red-light); color: var(--primary-red); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                <i class="fa-solid fa-user-shield"></i> ${DEFAULT_EMAIL}
+              </span>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="background: #fff8f9; padding: 1rem; border-radius: 12px; border: 1px solid var(--accent-red-light);">
+              <div style="font-size: 0.8rem; color: #64748b;">รหัสประจำตัวผู้สอน</div>
+              <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary-red);">T-001</div>
+            </div>
+            <div style="background: #fff8f9; padding: 1rem; border-radius: 12px; border: 1px solid var(--accent-red-light);">
+              <div style="font-size: 0.8rem; color: #64748b;">วันที่ลงทะเบียน</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark);">${new Date().toLocaleDateString('th-TH')}</div>
+            </div>
+            <div style="background: #fff8f9; padding: 1rem; border-radius: 12px; border: 1px solid var(--accent-red-light);">
+              <div style="font-size: 0.8rem; color: #64748b;">ห้องเกมที่สร้างไว้</div>
+              <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary-red);">${roomsStore.length} ห้อง</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="switchView('EDIT_PROFILE')">
+              <i class="fa-regular fa-pen-to-square"></i> แก้ไขข้อมูลโปรไฟล์
+            </button>
+            <button class="btn btn-secondary" onclick="triggerProfileImageSelect()">
+              <i class="fa-solid fa-image"></i> อัปโหลดรูปภาพใหม่
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEditProfileContent(container) {
+      container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">แก้ไขข้อมูลโปรไฟล์ (Edit Profile)</h2>
+        <div class="card" style="border-top: 6px solid var(--primary-red);">
+          <form onsubmit="handleSaveProfile(event)">
+            <div class="form-group">
+              <label>อัปโหลดรูปภาพโปรไฟล์ใหม่</label>
+              <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="triggerProfileImageSelect()">
+                  <i class="fa-solid fa-upload"></i> เลือกรูปภาพโปรไฟล์...
+                </button>
+                ${state.teacherAvatar ? `<button type="button" class="btn btn-danger" style="padding: 0.5rem 0.85rem;" onclick="removeProfileImage()"><i class="fa-solid fa-trash-can"></i> ลบรูปโปรไฟล์</button>` : ''}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>อีเมลผู้สอน (ไม่สามารถแก้ไขได้)</label>
+              <input type="email" class="form-control" value="${DEFAULT_EMAIL}" disabled style="background: #e2e8f0; color: #64748b;">
+            </div>
+            <div class="form-group">
+              <label>ชื่อ-นามสกุล / ชื่อแสดงผล</label>
+              <input type="text" id="editFullName" class="form-control" value="${state.teacherName}" required>
+            </div>
+            <div class="form-group">
+              <label>เปลี่ยนรหัสผ่านใหม่ (หากไม่ต้องการเปลี่ยนให้เว้นว่างไว้)</label>
+              <div class="neu-input-box">
+                <input type="password" id="editNewPassword" class="form-control" placeholder="ป้อนรหัสผ่านใหม่ที่ต้องการ">
+                <i class="fa-solid fa-eye input-icon-toggle" onclick="togglePasswordVisibility('editNewPassword', this)" style="top: 50%; right: 15px;" title="แสดง/ซ่อนรหัสผ่าน"></i>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+              <button type="submit" class="btn btn-primary" style="font-size: 1rem;">
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง
+              </button>
+              <button type="button" class="btn btn-secondary" onclick="switchView('VIEW_PROFILE')">
+                ยกเลิก
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function handleSaveProfile(e) {
+      e.preventDefault();
+      const fullName = document.getElementById('editFullName').value.trim();
+      state.teacherName = fullName;
+      localStorage.setItem('teacher_name', fullName);
+      alert('บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว');
+      switchView('VIEW_PROFILE');
+    }
+
+    function renderDashboardContent(container) {
+      const activeCount = roomsStore.filter(r => r.Status === 'Playing').length;
+      
+      container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">Dashboard ครูผู้สอน</h2>
+        <div class="stats-grid">
+          <div class="stat-card" style="border-left-color: #800020;"><div class="stat-val">${roomsStore.length}</div><div class="stat-lbl">ห้องเกมทั้งหมด</div></div>
+          <div class="stat-card" style="border-left-color: #a81c24;"><div class="stat-val">${activeCount}</div><div class="stat-lbl">ห้องที่กำลังดำเนินการ</div></div>
+          <div class="stat-card" style="border-left-color: #5c0017;"><div class="stat-val">12</div><div class="stat-lbl">นักเรียนเข้าร่วมทั้งหมด</div></div>
+          <div class="stat-card" style="border-left-color: #b91c1c;"><div class="stat-val">8.5</div><div class="stat-lbl">คะแนนเฉลี่ย</div></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">ประวัติห้องเกมล่าสุด</h3>
+          <div class="table-container">
+            <table class="leaderboard-table">
+              <thead><tr><th>รหัสห้อง (PIN)</th><th>ชื่อกิจกรรม</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <tbody>
+                ${roomsStore.length > 0 ? roomsStore.map(r => `
+                  <tr>
+                    <td><b style="color: var(--primary-red);">${r.RoomID}</b></td>
+                    <td><b>${r.Title}</b></td>
+                    <td><span class="timer-badge" style="font-size: 0.85rem; padding: 0.2rem 0.6rem;">${r.Status}</span></td>
+                    <td>
+                      <div style="display: flex; gap: 0.4rem;">
+                        <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="switchView('TEACHER_CONTROL', '${r.RoomID}')">ควบคุม</button>
+                        <button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="handleDeleteRoom('${r.RoomID}', '${r.Title}')" title="ลบห้องเกม"><i class="fa-solid fa-trash-can"></i> ลบ</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="4" style="text-align:center; padding: 1.5rem;">ยังไม่มีห้องเกมในระบบ</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCreateRoomContent(container) {
+      container.innerHTML = `
+        <div class="card" style="border-top: 6px solid var(--primary-red);">
+          <h2 style="font-weight: 800; margin-bottom: 1rem;">สร้างห้องเกมแข่งขันใหม่</h2>
+          <form onsubmit="handleCreateRoom(event)">
+            <div class="form-group"><label>ชื่อเกม / หัวข้อทดสอบ</label><input type="text" id="roomTitle" class="form-control" value="Cloud Computing Challenge Test" required></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group"><label>จำนวนคำถาม</label><input type="number" id="roomTotalQ" class="form-control" value="${questionsStore.length}" min="1" max="30" required></div>
+              <div class="form-group"><label>เวลาตอบต่อข้อ (วินาที)</label><input type="number" id="roomTime" class="form-control" value="30" min="5" max="120" required></div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.05rem; margin-top: 0.5rem;"><i class="fa-solid fa-circle-plus"></i> สร้างห้องเกมและรับ Game PIN</button>
+          </form>
+        </div>
+      `;
+    }
+
+    function handleCreateRoom(e) {
+      e.preventDefault();
+      const roomId = String(Math.floor(100000 + Math.random() * 900000));
+      const title = document.getElementById('roomTitle').value;
+      const totalQ = document.getElementById('roomTotalQ').value;
+      const roomTime = document.getElementById('roomTime').value;
+
+      roomsStore.unshift({
+        RoomID: roomId,
+        Title: title,
+        TotalQuestions: totalQ,
+        TimePerQuestion: roomTime,
+        Status: 'Playing'
+      });
+      saveRoomsToStore();
+
+      switchView('TEACHER_CONTROL', roomId);
+    }
+
+    function renderMyRoomsContent(container) {
+      container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">ห้องเกมของฉันทั้งหมด (${roomsStore.length} ห้อง)</h2>
+        <div class="card">
+          <div class="table-container">
+            <table class="leaderboard-table">
+              <thead><tr><th>Game PIN</th><th>ชื่อห้องเกม</th><th>จำนวนข้อ</th><th>เวลา/ข้อ</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+              <tbody>
+                ${roomsStore.length > 0 ? roomsStore.map(r => `
+                  <tr>
+                    <td><b style="font-size: 1.1rem; color: var(--primary-red);">${r.RoomID}</b></td>
+                    <td><b>${r.Title}</b></td>
+                    <td>${r.TotalQuestions} ข้อ</td>
+                    <td>${r.TimePerQuestion}s</td>
+                    <td><span style="font-weight:700; color:${r.Status === 'Playing' ? '#16a34a' : '#64748b'};">${r.Status}</span></td>
+                    <td>
+                      <div style="display: flex; gap: 0.4rem;">
+                        <button class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="switchView('TEACHER_CONTROL', '${r.RoomID}')"><i class="fa-solid fa-sliders"></i> ควบคุม</button>
+                        <button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;" onclick="handleDeleteRoom('${r.RoomID}', '${r.Title}')"><i class="fa-solid fa-trash-can"></i> ลบ</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6" style="text-align:center; padding: 1.5rem;">ยังไม่มีห้องเกมในระบบ</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleDeleteRoom(roomId, title) {
+      if (confirm(`คุณต้องการลบห้องเกม "${title}" (PIN: ${roomId}) ใช่หรือไม่?\n\n*ข้อมูลการแข่งขันและคะแนนของนักเรียนในห้องนี้จะถูกลบออกทั้งหมด`)) {
+        roomsStore = roomsStore.filter(r => r.RoomID !== roomId);
+        saveRoomsToStore();
+        alert(`ลบห้องเกม PIN ${roomId} เรียบร้อยแล้ว`);
+        switchView(state.currentView);
+      }
+    }
+
+    function renderQuestionsContent(container) {
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="font-weight: 800;">คลังคำถามวิชา Cloud Computing (${questionsStore.length} ข้อ)</h2>
+          <button class="btn btn-primary" onclick="toggleAddQuestionForm()">
+            <i class="fa-solid ${state.showAddQuestionForm ? 'fa-xmark' : 'fa-plus'}"></i> 
+            ${state.showAddQuestionForm ? 'ยกเลิกการเพิ่มข้อสอบ' : 'เพิ่มข้อสอบใหม่'}
+          </button>
+        </div>
+
+        ${state.showAddQuestionForm ? `
+          <div class="card" style="border-top: 6px solid var(--primary-red);">
+            <h3 style="font-weight: 800; margin-bottom: 1rem;">กรอกรายละเอียดข้อสอบใหม่</h3>
+            <form onsubmit="handleAddQuestionSubmit(event)">
+              <div class="form-group">
+                <label>โจทย์คำถาม</label>
+                <input type="text" id="newQText" class="form-control" placeholder="เช่น บริการแบบใดเน้นการพัฒนา App?" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                  <label>ตัวเลือก A</label>
+                  <input type="text" id="newOptA" class="form-control" placeholder="ตัวเลือก A" required>
+                </div>
+                <div class="form-group">
+                  <label>ตัวเลือก B</label>
+                  <input type="text" id="newOptB" class="form-control" placeholder="ตัวเลือก B" required>
+                </div>
+                <div class="form-group">
+                  <label>ตัวเลือก C</label>
+                  <input type="text" id="newOptC" class="form-control" placeholder="ตัวเลือก C" required>
+                </div>
+                <div class="form-group">
+                  <label>ตัวเลือก D</label>
+                  <input type="text" id="newOptD" class="form-control" placeholder="ตัวเลือก D" required>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                  <label>เฉลยข้อที่ถูกต้อง</label>
+                  <select id="newCorrectAns" class="form-control" required style="background: white;">
+                    <option value="A">ข้อ A</option>
+                    <option value="B">ข้อ B</option>
+                    <option value="C">ข้อ C</option>
+                    <option value="D">ข้อ D</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>หมวดหมู่ / เรื่อง (Topic)</label>
+                  <input type="text" id="newTopic" class="form-control" value="Cloud Services" placeholder="เช่น Cloud Basics" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>คำอธิบายเฉลยเพิ่มเติม</label>
+                <textarea id="newExplanation" class="form-control" rows="2" placeholder="อธิบายเพิ่มเติมเมื่อเฉลยข้อสอบ"></textarea>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อสอบลงคลัง</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleAddQuestionForm()">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        ` : ''}
+
+        <div>
+          ${questionsStore.map((q, idx) => `
+            <div class="q-card">
+              <div style="position: absolute; top: 1.25rem; right: 1.25rem;">
+                <button class="btn btn-danger" style="padding: 0.25rem 0.55rem; font-size: 0.78rem;" onclick="handleDeleteQuestion('${q.QuestionID}')" title="ลบข้อสอบนี้">
+                  <i class="fa-solid fa-trash-can"></i> ลบ
+                </button>
+              </div>
+              <div class="q-title">${idx + 1}. ${q.QuestionText} <span style="font-size:0.75rem; color:#800020; font-weight:600; background:#fbe8eb; padding:2px 8px; border-radius:10px; margin-left:6px;">${q.Topic || 'General'}</span></div>
+              <div class="q-options-grid">
+                <div class="q-option-item ${q.CorrectAnswer === 'A' ? 'correct' : ''}"><b>A:</b> ${q.OptionA}</div>
+                <div class="q-option-item ${q.CorrectAnswer === 'B' ? 'correct' : ''}"><b>B:</b> ${q.OptionB}</div>
+                <div class="q-option-item ${q.CorrectAnswer === 'C' ? 'correct' : ''}"><b>C:</b> ${q.OptionC}</div>
+                <div class="q-option-item ${q.CorrectAnswer === 'D' ? 'correct' : ''}"><b>D:</b> ${q.OptionD}</div>
+              </div>
+              <div style="font-size: 0.85rem; color: #64748b;">
+                <b>คำอธิบาย:</b> ${q.Explanation || 'ไม่มีคำอธิบายเพิ่มเติม'}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderTeachingMaterialsContent(container) {
+      const isFileMode = state.materialUploadMode === 'FILE';
+      
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="font-weight: 800;">สื่อการเรียนการสอน Cloud Computing (${materialsStore.length} รายการ)</h2>
+          <button class="btn btn-danger" onclick="toggleAddMaterialForm()">
+            <i class="fa-solid ${state.showAddMaterialForm ? 'fa-xmark' : 'fa-upload'}"></i> 
+            ${state.showAddMaterialForm ? 'ยกเลิกการเพิ่มสื่อ' : 'อัปโหลดสื่อการสอนใหม่'}
+          </button>
+        </div>
+
+        ${state.showAddMaterialForm ? `
+          <div class="card" style="border-top: 6px solid var(--primary-red);">
+            <h3 style="font-weight: 800; margin-bottom: 1rem;">เพิ่มสื่อการเรียนการสอนใหม่</h3>
+            
+            <div class="upload-source-switch">
+              <button type="button" class="upload-tab-btn ${isFileMode ? 'active' : ''}" onclick="switchMaterialUploadMode('FILE')">
+                <i class="fa-solid fa-file-arrow-up"></i> อัปโหลดไฟล์จากเครื่อง
+              </button>
+              <button type="button" class="upload-tab-btn ${!isFileMode ? 'active' : ''}" onclick="switchMaterialUploadMode('LINK')">
+                <i class="fa-solid fa-link"></i> ใส่ลิงก์ URL (Google Drive/Web)
+              </button>
+            </div>
+
+            <form onsubmit="handleAddMaterialSubmit(event)">
+              <div class="form-group">
+                <label>ชื่อสื่อการสอน / เอกสาร</label>
+                <input type="text" id="matTitle" class="form-control" placeholder="เช่น สไลด์บรรยายเรื่อง Cloud Deployment Models" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                  <label>ประเภทสื่อ</label>
+                  <select id="matIcon" class="form-control" required style="background: white;">
+                    <option value="fa-file-powerpoint">สไลด์การสอน (PowerPoint)</option>
+                    <option value="fa-file-pdf">เอกสาร PDF / สรุปความรู้</option>
+                    <option value="fa-file-video">วิดีโอประกอบการสอน</option>
+                    <option value="fa-file-code">ใบงาน / Lab ปฏิบัติการ</option>
+                  </select>
+                </div>
+                
+                <div class="form-group">
+                  <label>ขนาดไฟล์ / รูปแบบไฟล์</label>
+                  <input type="text" id="matFormat" class="form-control" placeholder="เช่น PDF / 5.2 MB" value="${state.uploadedFileData ? state.uploadedFileData.formatSize : ''}" required>
+                </div>
+              </div>
+
+              ${isFileMode ? `
+                <div class="form-group">
+                  <label>แนบไฟล์สื่อการเรียนการสอน (รองรับ PDF, PPTX, DOCX, MP4 ฯลฯ)</label>
+                  <input type="file" id="matFileInput" class="form-control" onchange="handleMaterialFileSelected(event)" required style="padding: 0.6rem; background: #fff8f9;">
+                  ${state.uploadedFileData ? `<small style="color: var(--success); font-weight:600; display:block; margin-top:4px;"><i class="fa-solid fa-check-circle"></i> เลือกไฟล์: ${state.uploadedFileData.fileName} (${state.uploadedFileData.formatSize}) เรียบร้อยแล้ว</small>` : ''}
+                </div>
+              ` : `
+                <div class="form-group">
+                  <label>URL / ลิงก์ดาวน์โหลดสื่อการสอน</label>
+                  <input type="url" id="matUrl" class="form-control" placeholder="https://drive.google.com/..." required>
+                </div>
+              `}
+
+              <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> บันทึกสื่อการสอน</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleAddMaterialForm()">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        ` : ''}
+
+        <div>
+          ${materialsStore.map((m) => `
+            <div class="material-card">
+              <div style="display: flex; align-items: center; gap: 1rem; overflow: hidden; margin-right: 1rem;">
+                <div class="material-icon">
+                  <i class="fa-solid ${m.icon}"></i>
+                </div>
+                <div>
+                  <h4 style="font-weight: 700; color: #1e1e1e; font-size: 1rem;">${m.title}</h4>
+                  <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+                    <span style="background: var(--accent-red-light); color: var(--primary-red); padding: 2px 8px; border-radius: 6px; font-weight: 600; margin-right: 6px;">${m.format}</span>
+                    <span><i class="fa-solid fa-hard-drive"></i> ${m.size}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                <a href="${m.url}" target="_blank" download="${m.fileName || ''}" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem; text-decoration: none;">
+                  <i class="fa-solid fa-download"></i> ดาวน์โหลด / เปิดดู
+                </a>
+                <button class="btn btn-danger" style="padding: 0.4rem 0.65rem; font-size: 0.85rem;" onclick="handleDeleteMaterial('${m.id}')" title="ลบสื่อนี้">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderWorksheetsContent(container) {
+      const isFileMode = state.worksheetUploadMode === 'FILE';
+
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="font-weight: 800;">ใบงานแบบฝึกหัด Cloud Computing (${worksheetsStore.length} รายการ)</h2>
+          <button class="btn btn-danger" onclick="toggleAddWorksheetForm()">
+            <i class="fa-solid ${state.showAddWorksheetForm ? 'fa-xmark' : 'fa-plus-circle'}"></i> 
+            ${state.showAddWorksheetForm ? 'ยกเลิกการเพิ่มใบงาน' : 'เพิ่มใบงานใหม่'}
+          </button>
+        </div>
+
+        ${state.showAddWorksheetForm ? `
+          <div class="card" style="border-top: 6px solid var(--primary-red);">
+            <h3 style="font-weight: 800; margin-bottom: 1rem;">เพิ่มใบงานใหม่</h3>
+            
+            <div class="upload-source-switch">
+              <button type="button" class="upload-tab-btn ${isFileMode ? 'active' : ''}" onclick="switchWorksheetUploadMode('FILE')">
+                <i class="fa-solid fa-file-arrow-up"></i> แนบไฟล์ใบงานจากเครื่อง
+              </button>
+              <button type="button" class="upload-tab-btn ${!isFileMode ? 'active' : ''}" onclick="switchWorksheetUploadMode('LINK')">
+                <i class="fa-solid fa-link"></i> ลิงก์ใบงานออนไลน์ (Google Docs/Liveworksheet)
+              </button>
+            </div>
+
+            <form onsubmit="handleAddWorksheetSubmit(event)">
+              <div class="form-group">
+                <label>ชื่อใบงาน / หัวข้อแบบฝึกหัด</label>
+                <input type="text" id="wsTitle" class="form-control" placeholder="เช่น ใบงานที่ 3: ออกแบบ Architecture บน AWS" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                  <label>คะแนนเต็ม</label>
+                  <input type="number" id="wsScore" class="form-control" value="10" min="1" max="100" required>
+                </div>
+                <div class="form-group">
+                  <label>ขนาดไฟล์ / รูปแบบไฟล์</label>
+                  <input type="text" id="wsFormat" class="form-control" placeholder="เช่น PDF / 1.5 MB" value="${state.uploadedWorksheetData ? state.uploadedWorksheetData.formatSize : ''}" required>
+                </div>
+              </div>
+
+              ${isFileMode ? `
+                <div class="form-group">
+                  <label>แนบไฟล์ใบงาน (PDF, DOCX ฯลฯ)</label>
+                  <input type="file" id="wsFileInput" class="form-control" onchange="handleWorksheetFileSelected(event)" required style="padding: 0.6rem; background: #fff8f9;">
+                  ${state.uploadedWorksheetData ? `<small style="color: var(--success); font-weight:600; display:block; margin-top:4px;"><i class="fa-solid fa-check-circle"></i> เลือกไฟล์: ${state.uploadedWorksheetData.fileName} (${state.uploadedWorksheetData.formatSize}) เรียบร้อยแล้ว</small>` : ''}
+                </div>
+              ` : `
+                <div class="form-group">
+                  <label>URL ลิงก์ใบงานออนไลน์</label>
+                  <input type="url" id="wsUrl" class="form-control" placeholder="https://docs.google.com/..." required>
+                </div>
+              `}
+
+              <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> บันทึกใบงาน</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleAddWorksheetForm()">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        ` : ''}
+
+        <div>
+          ${worksheetsStore.map((w) => `
+            <div class="material-card">
+              <div style="display: flex; align-items: center; gap: 1rem; overflow: hidden; margin-right: 1rem;">
+                <div class="material-icon">
+                  <i class="fa-solid ${w.icon || 'fa-file-pen'}"></i>
+                </div>
+                <div>
+                  <h4 style="font-weight: 700; color: #1e1e1e; font-size: 1rem;">${w.title}</h4>
+                  <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+                    <span style="background: var(--accent-red-light); color: var(--primary-red); padding: 2px 8px; border-radius: 6px; font-weight: 600; margin-right: 6px;">${w.format}</span>
+                    <span style="color: #16a34a; font-weight: 700; margin-right: 8px;"><i class="fa-solid fa-award"></i> คะแนนเต็ม ${w.score} คะแนน</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                <a href="${w.url}" target="_blank" download="${w.fileName || ''}" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem; text-decoration: none;">
+                  <i class="fa-solid fa-download"></i> ดาวน์โหลดใบงาน
+                </a>
+                <button class="btn btn-danger" style="padding: 0.4rem 0.65rem; font-size: 0.85rem;" onclick="handleDeleteWorksheet('${w.id}')" title="ลบใบงานนี้">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderLessonPlansContent(container) {
+      const isFileMode = state.lessonPlanUploadMode === 'FILE';
+
+      container.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <h2 style="font-weight: 800;">แผนการจัดการเรียนรู้ Cloud Computing (${lessonPlansStore.length} รายการ)</h2>
+          <button class="btn btn-danger" onclick="toggleAddLessonPlanForm()">
+            <i class="fa-solid ${state.showAddLessonPlanForm ? 'fa-xmark' : 'fa-clipboard-check'}"></i> 
+            ${state.showAddLessonPlanForm ? 'ยกเลิกการเพิ่มแผน' : 'เพิ่มแผนการสอนใหม่'}
+          </button>
+        </div>
+
+        ${state.showAddLessonPlanForm ? `
+          <div class="card" style="border-top: 6px solid var(--primary-red);">
+            <h3 style="font-weight: 800; margin-bottom: 1rem;">เพิ่มแผนการจัดการเรียนรู้ใหม่</h3>
+            
+            <div class="upload-source-switch">
+              <button type="button" class="upload-tab-btn ${isFileMode ? 'active' : ''}" onclick="switchLessonPlanUploadMode('FILE')">
+                <i class="fa-solid fa-file-arrow-up"></i> แนบไฟล์แผนการสอนจากเครื่อง
+              </button>
+              <button type="button" class="upload-tab-btn ${!isFileMode ? 'active' : ''}" onclick="switchLessonPlanUploadMode('LINK')">
+                <i class="fa-solid fa-link"></i> ลิงก์แผนการสอนออนไลน์ (Google Drive/Web)
+              </button>
+            </div>
+
+            <form onsubmit="handleAddLessonPlanSubmit(event)">
+              <div class="form-group">
+                <label>ชื่อแผนการจัดการเรียนรู้ / หัวข้อหน่วยการเรียนรู้</label>
+                <input type="text" id="lpTitle" class="form-control" placeholder="เช่น แผนการเรียนรู้ที่ 3: สถาปัตยกรรมและการความปลอดภัยบน Cloud" required>
+              </div>
+
+              <div class="form-group">
+                <label>ขนาดไฟล์ / รูปแบบไฟล์</label>
+                <input type="text" id="lpFormat" class="form-control" placeholder="เช่น PDF / 2.5 MB" value="${state.uploadedLessonPlanData ? state.uploadedLessonPlanData.formatSize : ''}" required>
+              </div>
+
+              ${isFileMode ? `
+                <div class="form-group">
+                  <label>แนบไฟล์แผนการสอน (PDF, DOCX ฯลฯ)</label>
+                  <input type="file" id="lpFileInput" class="form-control" onchange="handleLessonPlanFileSelected(event)" required style="padding: 0.6rem; background: #fff8f9;">
+                  ${state.uploadedLessonPlanData ? `<small style="color: var(--success); font-weight:600; display:block; margin-top:4px;"><i class="fa-solid fa-check-circle"></i> เลือกไฟล์: ${state.uploadedLessonPlanData.fileName} (${state.uploadedLessonPlanData.formatSize}) เรียบร้อยแล้ว</small>` : ''}
+                </div>
+              ` : `
+                <div class="form-group">
+                  <label>URL ลิงก์แผนการสอนออนไลน์</label>
+                  <input type="url" id="lpUrl" class="form-control" placeholder="https://drive.google.com/..." required>
+                </div>
+              `}
+
+              <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> บันทึกแผนการสอน</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleAddLessonPlanForm()">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        ` : ''}
+
+        <div>
+          ${lessonPlansStore.map((lp) => `
+            <div class="material-card">
+              <div style="display: flex; align-items: center; gap: 1rem; overflow: hidden; margin-right: 1rem;">
+                <div class="material-icon">
+                  <i class="fa-solid ${lp.icon || 'fa-clipboard-list'}"></i>
+                </div>
+                <div>
+                  <h4 style="font-weight: 700; color: #1e1e1e; font-size: 1rem;">${lp.title}</h4>
+                  <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+                    <span style="background: var(--accent-red-light); color: var(--primary-red); padding: 2px 8px; border-radius: 6px; font-weight: 600; margin-right: 6px;">${lp.format}</span>
+                    <span><i class="fa-solid fa-hard-drive"></i> ${lp.size}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                <a href="${lp.url}" target="_blank" download="${lp.fileName || ''}" class="btn btn-primary" style="padding: 0.4rem 0.85rem; font-size: 0.85rem; text-decoration: none;">
+                  <i class="fa-solid fa-download"></i> เปิดดู / ดาวน์โหลด
+                </a>
+                <button class="btn btn-danger" style="padding: 0.4rem 0.65rem; font-size: 0.85rem;" onclick="handleDeleteLessonPlan('${lp.id}')" title="ลบแผนการสอนนี้">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function switchLessonPlanUploadMode(mode) {
+      state.lessonPlanUploadMode = mode;
+      renderLessonPlansContent(document.getElementById('mainContentInner'));
+    }
+
+    function handleLessonPlanFileSelected(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const ext = file.name.split('.').pop().toUpperCase();
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+        const formatStr = `${ext} / ${sizeMB}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          state.uploadedLessonPlanData = {
+            fileName: file.name,
+            fileUrl: evt.target.result,
+            formatSize: formatStr
+          };
+          const formatInput = document.getElementById('lpFormat');
+          if (formatInput) formatInput.value = formatStr;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleAddLessonPlanForm() {
+      state.showAddLessonPlanForm = !state.showAddLessonPlanForm;
+      state.uploadedLessonPlanData = null;
+      switchView('LESSON_PLANS');
+    }
+
+    function handleAddLessonPlanSubmit(e) {
+      e.preventDefault();
+      const isFileMode = state.lessonPlanUploadMode === 'FILE';
+      let fileUrl = '#';
+      let fileName = '';
+
+      if (isFileMode) {
+        if (!state.uploadedLessonPlanData) {
+          alert('กรุณาเลือกไฟล์แผนการสอนก่อนทำการบันทึกครับ');
+          return;
+        }
+        fileUrl = state.uploadedLessonPlanData.fileUrl;
+        fileName = state.uploadedLessonPlanData.fileName;
+      } else {
+        fileUrl = document.getElementById('lpUrl').value.trim();
+      }
+
+      const newLessonPlan = {
+        id: 'LP-' + String(lessonPlansStore.length + 1).padStart(2, '0'),
+        title: document.getElementById('lpTitle').value.trim(),
+        icon: 'fa-clipboard-list',
+        format: document.getElementById('lpFormat').value.trim(),
+        size: isFileMode ? 'ไฟล์ในระบบ' : 'ลิงก์ภายนอก',
+        url: fileUrl,
+        fileName: fileName
+      };
+      
+      lessonPlansStore.push(newLessonPlan);
+      saveLessonPlansToStore();
+      state.showAddLessonPlanForm = false;
+      state.uploadedLessonPlanData = null;
+      alert("เพิ่มแผนการสอนใหม่เรียบร้อยแล้ว!");
+      switchView('LESSON_PLANS');
+    }
+
+    function handleDeleteLessonPlan(id) {
+      if (confirm('คุณต้องการลบแผนการสอนนี้ใช่หรือไม่?')) {
+        lessonPlansStore = lessonPlansStore.filter(lp => lp.id !== id);
+        saveLessonPlansToStore();
+        switchView('LESSON_PLANS');
+      }
+    }
+
+    function switchWorksheetUploadMode(mode) {
+      state.worksheetUploadMode = mode;
+      renderWorksheetsContent(document.getElementById('mainContentInner'));
+    }
+
+    function handleWorksheetFileSelected(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const ext = file.name.split('.').pop().toUpperCase();
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+        const formatStr = `${ext} / ${sizeMB}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          state.uploadedWorksheetData = {
+            fileName: file.name,
+            fileUrl: evt.target.result,
+            formatSize: formatStr
+          };
+          const formatInput = document.getElementById('wsFormat');
+          if (formatInput) formatInput.value = formatStr;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleAddWorksheetForm() {
+      state.showAddWorksheetForm = !state.showAddWorksheetForm;
+      state.uploadedWorksheetData = null;
+      switchView('WORKSHEETS');
+    }
+
+    function handleAddWorksheetSubmit(e) {
+      e.preventDefault();
+      const isFileMode = state.worksheetUploadMode === 'FILE';
+      let fileUrl = '#';
+      let fileName = '';
+
+      if (isFileMode) {
+        if (!state.uploadedWorksheetData) {
+          alert('กรุณาเลือกไฟล์ใบงานก่อนทำการบันทึกครับ');
+          return;
+        }
+        fileUrl = state.uploadedWorksheetData.fileUrl;
+        fileName = state.uploadedWorksheetData.fileName;
+      } else {
+        fileUrl = document.getElementById('wsUrl').value.trim();
+      }
+
+      const newWorksheet = {
+        id: 'W-' + String(worksheetsStore.length + 1).padStart(2, '0'),
+        title: document.getElementById('wsTitle').value.trim(),
+        score: document.getElementById('wsScore').value,
+        icon: 'fa-file-pen',
+        format: document.getElementById('wsFormat').value.trim(),
+        size: isFileMode ? 'ไฟล์ในระบบ' : 'ลิงก์ภายนอก',
+        url: fileUrl,
+        fileName: fileName
+      };
+      
+      worksheetsStore.push(newWorksheet);
+      saveWorksheetsToStore();
+      state.showAddWorksheetForm = false;
+      state.uploadedWorksheetData = null;
+      alert("เพิ่มใบงานเรียบร้อยแล้ว!");
+      switchView('WORKSHEETS');
+    }
+
+    function handleDeleteWorksheet(id) {
+      if (confirm('คุณต้องการลบใบงานนี้ใช่หรือไม่?')) {
+        worksheetsStore = worksheetsStore.filter(w => w.id !== id);
+        saveWorksheetsToStore();
+        switchView('WORKSHEETS');
+      }
+    }
+
+    function switchMaterialUploadMode(mode) {
+      state.materialUploadMode = mode;
+      renderTeachingMaterialsContent(document.getElementById('mainContentInner'));
+    }
+
+    function handleMaterialFileSelected(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const ext = file.name.split('.').pop().toUpperCase();
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+        const formatStr = `${ext} / ${sizeMB}`;
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          state.uploadedFileData = {
+            fileName: file.name,
+            fileUrl: evt.target.result,
+            formatSize: formatStr
+          };
+          const formatInput = document.getElementById('matFormat');
+          if (formatInput) formatInput.value = formatStr;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function toggleAddMaterialForm() {
+      state.showAddMaterialForm = !state.showAddMaterialForm;
+      state.uploadedFileData = null;
+      switchView('TEACHING_MATERIALS');
+    }
+
+    function handleAddMaterialSubmit(e) {
+      e.preventDefault();
+      const isFileMode = state.materialUploadMode === 'FILE';
+      let fileUrl = '#';
+      let fileName = '';
+
+      if (isFileMode) {
+        if (!state.uploadedFileData) {
+          alert('กรุณาเลือกไฟล์เอกสารสื่อการสอนก่อนทำการบันทึกครับ');
+          return;
+        }
+        fileUrl = state.uploadedFileData.fileUrl;
+        fileName = state.uploadedFileData.fileName;
+      } else {
+        fileUrl = document.getElementById('matUrl').value.trim();
+      }
+
+      const newMaterial = {
+        id: 'M-' + String(materialsStore.length + 1).padStart(2, '0'),
+        title: document.getElementById('matTitle').value.trim(),
+        icon: document.getElementById('matIcon').value,
+        format: document.getElementById('matFormat').value.trim(),
+        size: isFileMode ? 'ไฟล์ในระบบ' : 'ลิงก์ภายนอก',
+        url: fileUrl,
+        fileName: fileName
+      };
+      
+      materialsStore.push(newMaterial);
+      saveMaterialsToStore();
+      state.showAddMaterialForm = false;
+      state.uploadedFileData = null;
+      alert("เพิ่มสื่อการสอนใหม่เรียบร้อยแล้ว!");
+      switchView('TEACHING_MATERIALS');
+    }
+
+    function handleDeleteMaterial(id) {
+      if (confirm('คุณต้องการลบสื่อการเรียนการสอนนี้ใช่หรือไม่?')) {
+        materialsStore = materialsStore.filter(m => m.id !== id);
+        saveMaterialsToStore();
+        switchView('TEACHING_MATERIALS');
+      }
+    }
+
+    function toggleAddQuestionForm() {
+      state.showAddQuestionForm = !state.showAddQuestionForm;
+      switchView('QUESTIONS');
+    }
+
+    function handleAddQuestionSubmit(e) {
+      e.preventDefault();
+      const newQuestion = {
+        QuestionID: "Q-" + String(questionsStore.length + 1).padStart(2, '0'),
+        Topic: document.getElementById('newTopic').value.trim(),
+        QuestionText: document.getElementById('newQText').value.trim(),
+        OptionA: document.getElementById('newOptA').value.trim(),
+        OptionB: document.getElementById('newOptB').value.trim(),
+        OptionC: document.getElementById('newOptC').value.trim(),
+        OptionD: document.getElementById('newOptD').value.trim(),
+        CorrectAnswer: document.getElementById('newCorrectAns').value,
+        Explanation: document.getElementById('newExplanation').value.trim()
+      };
+
+      questionsStore.push(newQuestion);
+      saveQuestionsToStore();
+      state.showAddQuestionForm = false;
+      alert("เพิ่มข้อสอบใหม่เรียบร้อยแล้ว!");
+      switchView('QUESTIONS');
+    }
+
+    function handleDeleteQuestion(questionId) {
+      if (confirm(`คุณต้องการลบข้อสอบรหัส ${questionId} ใช่หรือไม่?`)) {
+        questionsStore = questionsStore.filter(q => q.QuestionID !== questionId);
+        saveQuestionsToStore();
+        switchView('QUESTIONS');
+      }
+    }
+
+    function renderAnalyticsContent(container) {
+      container.innerHTML = `
+        <h2 style="margin-bottom: 1.5rem; font-weight: 800;">รายงานผลการเรียนรู้และสถิติการแข่งขัน</h2>
+        <div class="stats-grid">
+          <div class="stat-card" style="border-left-color: #800020;"><div class="stat-val">12</div><div class="stat-lbl">ผู้เข้าแข่งขันทั้งหมด</div></div>
+          <div class="stat-card" style="border-left-color: #15803d;"><div class="stat-val">8.5</div><div class="stat-lbl">คะแนนเฉลี่ย</div></div>
+          <div class="stat-card" style="border-left-color: #a81c24;"><div class="stat-val">10</div><div class="stat-lbl">คะแนนสูงสุด</div></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 1rem;">อันดับผู้ได้คะแนนสูงสุด (Leaderboard)</h3>
+          <div class="table-container">
+            <table class="leaderboard-table">
+              <thead><tr><th>อันดับ</th><th>ชื่อนักเรียน</th><th>คะแนนรวม</th><th>ตอบถูก (ข้อ)</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><b>#1</b></td>
+                  <td>นักเรียน ตัวอย่าง</td>
+                  <td><b style="color:var(--primary-red);">10 คะแนน</b></td>
+                  <td>1 ข้อ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTeacherControlContent(container) {
+      container.innerHTML = `<div class="card" id="teacherControlPanel"><h2>กำลังเชื่อมต่อระบบควบคุมห้อง...</h2></div>`;
+    }
+
+    function updateTeacherControlDynamicUI() {
+      const panel = document.getElementById('teacherControlPanel');
+      if (!panel || !state.gameSync) return;
+      const g = state.gameSync;
+      const q = g.currentQuestion;
+      
+      const leaderboardRows = (g.leaderboard && g.leaderboard.length) 
+        ? g.leaderboard.map((s, i) => `
+            <tr>
+              <td><b style="font-size: 1.1rem; color: ${i===0 ? '#eab308' : (i===1 ? '#94a3b8' : (i===2 ? '#b45309' : '#334155'))}">#${i+1}</b></td>
+              <td><b>${s.StudentName}</b></td>
+              <td><b style="color: var(--primary-red); font-size: 1.1rem;">${s.TotalScore}</b> คะแนน</td>
+              <td><span class="q-option-item correct" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;">ตอบถูก ${s.CorrectCount} ข้อ</span></td>
+            </tr>
+          `).join('')
+        : `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding: 1.5rem;">ยังไม่มีผู้เล่นส่งคำตอบ หรือรอการเริ่มเกม...</td></tr>`;
+
+      panel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div><h2 style="font-weight: 800;">${g.title}</h2><p>สถานะห้อง: <b>${g.status}</b></p></div>
+          <div class="timer-badge"><i class="fa-solid fa-clock"></i> เวลาเหลือ: ${g.timeRemaining}s</div>
+        </div>
+        
+        <div class="card" style="text-align: center; background: var(--accent-red-light); border: 2px dashed var(--primary-red); margin-bottom: 1.25rem;">
+          <h3>รหัสเข้าร่วมห้องเรียน (Game PIN)</h3>
+          <div class="room-code-badge">${g.roomId}</div>
+        </div>
+
+        ${q ? `
+          <div class="card" style="border-top: 5px solid var(--primary-red); margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-weight: 700; color: var(--primary-red); font-size: 1.1rem;">
+                <i class="fa-solid fa-file-question"></i> คำถามข้อที่ ${g.currentQuestionIndex} / ${g.totalQuestions}
+              </span>
+              <span style="font-size: 0.85rem; background: var(--accent-red-light); color: var(--primary-red); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
+                ${q.Topic || 'General'}
+              </span>
+            </div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: #0f172a;">${q.QuestionText}</h3>
+            
+            <div class="q-options-grid">
+              <div class="q-option-item ${q.CorrectAnswer === 'A' ? 'correct' : ''}"><b>A:</b> ${q.OptionA}</div>
+              <div class="q-option-item ${q.CorrectAnswer === 'B' ? 'correct' : ''}"><b>B:</b> ${q.OptionB}</div>
+              <div class="q-option-item ${q.CorrectAnswer === 'C' ? 'correct' : ''}"><b>C:</b> ${q.OptionC}</div>
+              <div class="q-option-item ${q.CorrectAnswer === 'D' ? 'correct' : ''}"><b>D:</b> ${q.OptionD}</div>
+            </div>
+            ${q.Explanation ? `<div style="font-size: 0.85rem; color: #64748b; margin-top: 0.5rem;"><b>เฉลย/คำอธิบาย:</b> ${q.Explanation}</div>` : ''}
+          </div>
+        ` : ''}
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          ${g.status === 'Waiting' ? `<button class="btn btn-success" onclick="sendTeacherAction('START_GAME')"><i class="fa-solid fa-play"></i> เริ่มการแข่งขัน</button>` : ''}
+          ${g.status === 'Playing' ? `
+            <button class="btn btn-primary" onclick="sendTeacherAction('OPEN_QUESTION')"><i class="fa-solid fa-forward"></i> ข้อถัดไป (${g.currentQuestionIndex}/${g.totalQuestions})</button>
+            <button class="btn btn-secondary" onclick="sendTeacherAction('START_TIMER')"><i class="fa-solid fa-stopwatch"></i> จับเวลา</button>
+            <button class="btn btn-danger" onclick="sendTeacherAction('CLOSE_ANSWERS')"><i class="fa-solid fa-lock"></i> ปิดรับคำตอบ</button>
+            <button class="btn btn-success" onclick="sendTeacherAction('REVEAL_ANSWER')"><i class="fa-solid fa-eye"></i> เฉลยคำตอบ</button>
+          ` : ''}
+        </div>
+
+        <div class="card" style="border-top: 5px solid var(--primary-red);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-weight: 800;"><i class="fa-solid fa-trophy" style="color: #eab308; margin-right: 0.5rem;"></i> ตารางคะแนนเรียลไทม์ (Live Leaderboard)</h3>
+            <span style="font-size: 0.8rem; background: var(--accent-red-light); color: var(--primary-red); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
+              <i class="fa-solid fa-rotate fa-spin"></i> อัปเดตอัตโนมัติ
+            </span>
+          </div>
+          <div class="table-container">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>อันดับ</th>
+                  <th>ชื่อผู้เล่น</th>
+                  <th>คะแนนรวม</th>
+                  <th>ความถูกต้อง</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${leaderboardRows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function sendTeacherAction(action) {
+      alert(`ส่งคำสั่งผู้สอน: ${action}`);
+      fetchGameSyncData();
+    }
+
+    // ปรับปรุงการแสดงผลหน้าเล่นเกมของนักเรียนให้สวยงาม ดูทันสมัย
+    function renderStudentGameView(container) {
+      container.innerHTML = `
+        <div class="student-container">
+          <div class="student-header-bar">
+            <div class="student-nav-group">
+              <button class="neu-nav-btn" onclick="handleStudentGoHome()"><i class="fa-solid fa-house"></i> โฮม</button>
+              <button class="neu-nav-btn" onclick="handleStudentGoHome()"><i class="fa-solid fa-chevron-left"></i> ย้อนกลับ</button>
+            </div>
+            <button class="neu-nav-btn exit-btn" onclick="handleStudentExitGame()"><i class="fa-solid fa-arrow-right-from-bracket"></i> ออกจากเกม</button>
+          </div>
+          <div id="studentGameArea">
+            <div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+              <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--primary-red); margin-bottom: 1rem;"></i>
+              <h3 style="font-weight: 700;">กำลังเชื่อมต่อเข้าร่วมการแข่งขัน...</h3>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateStudentGameDynamicUI() {
+      const area = document.getElementById('studentGameArea');
+      if (!area || !state.gameSync) return;
+      const g = state.gameSync;
+      const myScoreInfo = g.myScore || { TotalScore: 0, CorrectCount: 0, Rank: '-' };
+      const studentInitial = (state.studentName || 'S').charAt(0).toUpperCase();
+
+      if (state.lastRenderedQuestionIndex !== g.currentQuestionIndex) {
+        state.lastRenderedQuestionIndex = g.currentQuestionIndex;
+        state.selectedOption = null;
+        state.hasSubmitted = false;
+      }
+
+      if (g.status === 'Waiting') {
+        area.innerHTML = `
+          <div class="card" style="text-align: center; padding: 3rem 2rem; border-top: 6px solid var(--primary-red);">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--accent-red-light); color: var(--primary-red); display: inline-flex; align-items: center; justify-content: center; font-size: 2.2rem; margin-bottom: 1.25rem; box-shadow: 0 8px 20px rgba(128,0,32,0.12);">
+              <i class="fa-solid fa-hourglass-half fa-spin"></i>
+            </div>
+            <h2 style="font-weight: 800; color: #1e1e1e; font-size: 1.6rem; margin-bottom: 0.25rem;">ยินดีต้อนรับ คุณ${state.studentName}</h2>
+            <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.75rem;">เข้าร่วมห้องแข่งขันรหัส <b>PIN: ${g.roomId}</b> เรียบร้อยแล้ว</p>
+            
+            <div style="background: linear-gradient(135deg, #fff8f9 0%, var(--accent-red-light) 100%); border: 1px solid #f9d5db; padding: 1.1rem; border-radius: 16px; color: var(--primary-red); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
+              <i class="fa-solid fa-tower-broadcast fa-beat"></i> กรุณารอครูผู้สอนเริ่มต้นการแข่งขัน...
+            </div>
+          </div>
+        `;
+      } else if (g.status === 'Playing' && g.currentQuestion) {
+        const q = g.currentQuestion;
+        area.innerHTML = `
+          <!-- แถบโปรไฟล์และสถิตินักเรียน -->
+          <div class="student-score-banner">
+            <div class="student-player-badge">
+              <div class="student-avatar-circle">${studentInitial}</div>
+              <div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">ผู้เข้าแข่งขัน</div>
+                <div style="font-size: 1.15rem; font-weight: 800; color: #111827;">${state.studentName || 'นักเรียน'}</div>
+              </div>
+            </div>
+
+            <div class="student-score-stats">
+              <div class="stat-pill">
+                <div class="stat-pill-lbl">คะแนน</div>
+                <div class="stat-pill-val">${myScoreInfo.TotalScore}</div>
+              </div>
+              <div class="stat-pill">
+                <div class="stat-pill-lbl">ตอบถูก</div>
+                <div class="stat-pill-val" style="color: #16a34a;">${myScoreInfo.CorrectCount}</div>
+              </div>
+              <div class="stat-pill">
+                <div class="stat-pill-lbl">อันดับ</div>
+                <div class="stat-pill-val" style="color: #d97706;">#${myScoreInfo.Rank}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- การ์ดโจทย์คำถาม -->
+          <div class="card" style="box-shadow: 0 15px 35px rgba(0,0,0,0.06); border: 1px solid var(--accent-red-light);">
+            <div class="question-card-header">
+              <div class="q-badge-step">
+                <i class="fa-solid fa-puzzle-piece"></i> ข้อที่ ${g.currentQuestionIndex} / ${g.totalQuestions}
+              </div>
+              <div class="timer-badge">
+                <i class="fa-solid fa-clock-rotate-left"></i> ${g.timeRemaining}s
+              </div>
+            </div>
+
+            <div class="question-title-text">
+              ${q.QuestionText}
+            </div>
+            
+            ${state.hasSubmitted ? `
+              <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #14532d; padding: 1.1rem; border-radius: 16px; text-align: center; font-weight: 700; margin-bottom: 1.5rem; border: 1px solid #86efac; box-shadow: 0 4px 12px rgba(22, 101, 52, 0.08); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                <i class="fa-solid fa-circle-check fa-lg"></i> ส่งคำตอบเรียบร้อยแล้ว (ตัวเลือก ${state.selectedOption}) - รอนำเสนอเฉลย
+              </div>
+            ` : ''}
+
+            <!-- ตัวเลือกคำตอบ A, B, C, D -->
+            <div class="options-grid">
+              <button class="option-btn ${state.selectedOption==='A'?'selected':''}" ${state.hasSubmitted ? 'disabled' : ''} onclick="submitStudentAnswer('${q.QuestionID}', 'A')">
+                <span class="opt-prefix">A</span>
+                <span>${q.OptionA}</span>
+              </button>
+              <button class="option-btn ${state.selectedOption==='B'?'selected':''}" ${state.hasSubmitted ? 'disabled' : ''} onclick="submitStudentAnswer('${q.QuestionID}', 'B')">
+                <span class="opt-prefix">B</span>
+                <span>${q.OptionB}</span>
+              </button>
+              <button class="option-btn ${state.selectedOption==='C'?'selected':''}" ${state.hasSubmitted ? 'disabled' : ''} onclick="submitStudentAnswer('${q.QuestionID}', 'C')">
+                <span class="opt-prefix">C</span>
+                <span>${q.OptionC}</span>
+              </button>
+              <button class="option-btn ${state.selectedOption==='D'?'selected':''}" ${state.hasSubmitted ? 'disabled' : ''} onclick="submitStudentAnswer('${q.QuestionID}', 'D')">
+                <span class="opt-prefix">D</span>
+                <span>${q.OptionD}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (g.status === 'Finished') {
+        area.innerHTML = `
+          <div class="card" style="text-align: center; padding: 3rem 1.75rem; border-top: 6px solid #eab308;">
+            <div style="width: 90px; height: 90px; border-radius: 50%; background: #fef9c3; color: #ca8a04; display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 1.25rem; box-shadow: 0 10px 25px rgba(234, 179, 8, 0.2);">
+              <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 style="font-weight: 800; font-size: 1.75rem; color: #1e1e1e;">จบการแข่งขันเรียบร้อย!</h2>
+            <p style="font-size: 1rem; color: #64748b; margin-top: 0.25rem;">สรุปผลคะแนนของคุณ ${state.studentName}</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0;">
+              <div style="background: #fff8f9; padding: 1.25rem 0.75rem; border-radius: 16px; border: 1px solid var(--accent-red-light);">
+                <div style="font-size: 0.8rem; color: #64748b; font-weight:600;">คะแนนรวม</div>
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary-red); margin-top: 2px;">${myScoreInfo.TotalScore}</div>
+              </div>
+              <div style="background: #f0fdf4; padding: 1.25rem 0.75rem; border-radius: 16px; border: 1px solid #bbf7d0;">
+                <div style="font-size: 0.8rem; color: #166534; font-weight:600;">ตอบถูกต้อง</div>
+                <div style="font-size: 1.8rem; font-weight: 800; color: #15803d; margin-top: 2px;">${myScoreInfo.CorrectCount} ข้อ</div>
+              </div>
+              <div style="background: #fefce8; padding: 1.25rem 0.75rem; border-radius: 16px; border: 1px solid #fef08a;">
+                <div style="font-size: 0.8rem; color: #854d0e; font-weight:600;">อันดับสุดท้าย</div>
+                <div style="font-size: 1.8rem; font-weight: 800; color: #ca8a04; margin-top: 2px;">#${myScoreInfo.Rank}</div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="padding: 0.8rem 2rem; font-size: 1rem; border-radius: 20px;" onclick="handleStudentExitGame()">
+              <i class="fa-solid fa-house"></i> กลับสู่หน้าหลัก
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function submitStudentAnswer(questionId, option) {
+      if (state.hasSubmitted) return;
+      state.selectedOption = option;
+      state.hasSubmitted = true;
+      updateStudentGameDynamicUI();
+    }
+
+    function updateActiveViewDynamicElements() {
+      if (state.currentView === 'TEACHER_CONTROL') updateTeacherControlDynamicUI();
+      else if (state.currentView === 'STUDENT_GAME') updateStudentGameDynamicUI();
+    }
+  </script>
+</body>
+</html>
